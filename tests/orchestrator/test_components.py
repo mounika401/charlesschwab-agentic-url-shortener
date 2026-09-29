@@ -166,3 +166,11 @@ def test_anthropic_provider_requires_key(monkeypatch):
 def test_vague_terms_detected_unless_quantified():
     assert detect_vague_terms("Make it safe for public use and more robust") == ["public use", "robust", "safe"]
     assert detect_vague_terms("Redirects must be fast: under 50 ms p99") == []
+
+
+def test_codebase_identifier_tokens():
+    from orchestrator.agents.codebase import identifier_tokens
+
+    assert identifier_tokens("generate_code") == {"generate", "code"}
+    assert identifier_tokens("TokenBucketLimiter") == {"token", "bucket", "limiter"}
+    assert "rate" not in identifier_tokens("generate_code")

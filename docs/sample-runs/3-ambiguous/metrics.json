@@ -1,0 +1,30 @@
+{
+  "status": "succeeded",
+  "end_to_end_latency_s": 7.687,
+  "nodes_total": 17,
+  "nodes_succeeded": 17,
+  "nodes_failed": 0,
+  "node_success_rate": 1.0,
+  "attempts_total": 27,
+  "attempt_success_rate": 1.0,
+  "retries": 0,
+  "retry_frequency": 0.0,
+  "rollbacks": 0,
+  "fallbacks": 0,
+  "policy_violations": 0,
+  "replans": 1,
+  "approvals": 9,
+  "approval_wait_s": 0.0,
+  "incidents_recovered": 0,
+  "incidents_unrecovered": 0,
+  "mttr_s": null,
+  "stage_latency_s": {
+    "design": 0.635,
+    "docs": 1.024,
+    "implement": 3.626,
+    "plan": 0.011,
+    "release": 0.504,
+    "requirements": 0.038,
+    "verify": 3.476
+  }
+}

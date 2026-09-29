@@ -27,6 +27,15 @@ def module_name(path: Path, root: Path) -> str:
     return ".".join(parts)
 
 
+def identifier_tokens(name: str) -> set[str]:
+    """``generate_code`` -> {generate, code}; ``LinkService`` -> {link, service}.
+
+    Whole-token matching stops 'rate' from matching 'generate'.
+    """
+    spaced = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
+    return {t.lower() for t in re.split(r"[_\W]+", spaced) if t}
+
+
 def analyse(root: Path, package: str) -> dict:
     modules: dict[str, dict] = {}
     imports: dict[str, set[str]] = defaultdict(set)
@@ -101,8 +110,8 @@ class CodebaseAgent:
             reasons = []
             if mod in spec.get("touches", []):
                 reasons.append("named in spec")
-            names = [n.lower() for n in meta["definitions"] + handlers[mod]]
-            hits = sorted({k for k in keywords for n in names if k in n})
+            tokens = {tok for n in meta["definitions"] + handlers[mod] for tok in identifier_tokens(n)}
+            hits = sorted(k for k in keywords if k in tokens)
             if hits:
                 reasons.append(f"defines symbols matching {hits}")
             if reasons:
