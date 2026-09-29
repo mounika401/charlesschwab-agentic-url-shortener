@@ -1,0 +1,28 @@
+diff --git a/shortener/db.py b/shortener/db.py
+index 7a8f8b2..2911bdd 100644
+--- a/shortener/db.py
++++ b/shortener/db.py
+@@ -27,6 +27,23 @@ MIGRATIONS: list[tuple[int, str, str]] = [
+         CREATE INDEX idx_links_created_at ON links (created_at);
+         """,
+     ),
++    (
++        2,
++        "create click_events",
++        # Raw IPs are never stored: visitor_hash is a salted, truncated digest and
++        # the referrer is reduced to its host. ON DELETE CASCADE keeps analytics
++        # from outliving the link they describe.
++        """
++        CREATE TABLE click_events (
++            id            INTEGER PRIMARY KEY AUTOINCREMENT,
++            code          TEXT NOT NULL REFERENCES links (code) ON DELETE CASCADE,
++            occurred_at   TEXT NOT NULL,
++            referrer_host TEXT,
++            visitor_hash  TEXT NOT NULL
++        );
++        CREATE INDEX idx_click_events_code_time ON click_events (code, occurred_at);
++        """,
++    ),
+ ]
+ 
+ 

@@ -1,0 +1,49 @@
+approver: avinash.kanna
+decisions:
+  - match: {checkpoint: clarification}
+    decision: answer
+    answers:
+      threat-scope: destinations-and-creation-flooding
+      create-limit: "30 per minute, burst 30, configurable (0 disables)"
+      limiter-state: in-memory-per-instance
+      define-robust: "abuse controls fail closed (reject) and never affect resolving existing links"
+    comment: "Single instance at launch, so in-memory is fine; revisit before we scale out."
+
+  - match: {checkpoint: design_signoff, occurrence: 1}
+    decision: approve
+    comment: "Syntactic checks only is the right call; no network calls in the request path."
+
+  # After the change request at release review, the design comes back once more.
+  - match: {checkpoint: design_signoff, occurrence: 2}
+    decision: approve
+    comment: "Redirect limiter reuses the same token bucket; limit configurable. Approved."
+
+  - match: {checkpoint: change_review, node: "impl:A2"}
+    decision: approve
+    comment: "Blocklist uses label-boundary suffix matching; cloud metadata IP covered."
+  - match: {checkpoint: change_review, node: "impl:A4"}
+    decision: approve
+    comment: "Safety check runs after syntax validation, before any write."
+  - match: {checkpoint: change_review, node: "impl:A5"}
+    decision: approve
+    comment: "Client key is the peer address, not X-Forwarded-For. Good."
+  - match: {checkpoint: change_review, node: "impl:A6"}
+    decision: approve
+    comment: "Limited redirects return 429 before any click is recorded."
+
+  # Release review, first pass: the reviewer spots a gap and requests a change
+  # instead of approving. This drives a governed re-plan (see report).
+  - match: {checkpoint: release, occurrence: 1}
+    decision: request_changes
+    comment: "Launch bots will hammer redirects and inflate analytics. Rate-limit redirects too."
+    amendment:
+      target: requirements
+      requirement: "Per-client rate limit on redirects (default 300/min, configurable, 0 disables); limited requests return 429 and are not counted as clicks"
+      flags: [redirect_rate_limit]
+      acceptance_criteria:
+        - "More than the configured redirects per minute from one client return 429 and do not increment click_count"
+      reason: "Residual threat T5 (redirect flooding) is not acceptable for a public launch"
+
+  - match: {checkpoint: release, occurrence: 2}
+    decision: approve
+    comment: "Change request addressed, T5 mitigated, suite green. Ship 1.2.0."

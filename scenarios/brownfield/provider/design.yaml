@@ -1,0 +1,27 @@
+endpoints:
+  - {method: POST, path: /api/v1/links, status: 201, notes: unchanged}
+  - {method: GET, path: "/api/v1/links/{code}", status: 200, notes: unchanged}
+  - {method: DELETE, path: "/api/v1/links/{code}", status: 204, notes: "now cascades to click events"}
+  - {method: GET, path: "/api/v1/links/{code}/stats", status: 200, notes: "NEW: aggregates; 404 unknown"}
+  - {method: GET, path: "/{code}", status: 307, notes: "records click event only on success (BUG-101)"}
+  - {method: GET, path: /healthz, status: 200, notes: unchanged}
+  - {method: GET, path: /readyz, status: 200, notes: "schema_version now 2"}
+data_model:
+  - {table: click_events, change: "new (migration 2): id, code FK ON DELETE CASCADE, occurred_at, referrer_host, visitor_hash; index (code, occurred_at)"}
+adrs:
+  - id: ADR-004
+    title: Append-only click events aggregated at read time
+    decision: "Store one row per successful redirect; compute stats with GROUP BY on request."
+    rationale: "Always consistent, trivially correct, cheap at internal volumes (indexed by code+time). The AnalyticsRepository interface allows swapping to a stream + rollup table without touching callers."
+    alternatives: ["Pre-aggregated counters per day (fast reads, harder to add new dimensions, update contention)", "External analytics pipeline (operational overhead out of proportion to need)"]
+    consequences: "Table grows unbounded until a retention policy is agreed (recorded as residual risk)."
+  - id: ADR-005
+    title: Pseudonymous visitor identity
+    decision: "visitor_id = first 16 hex chars of SHA-256(secret salt | IP | user-agent); referrer stored as host only."
+    rationale: "Legal requires no raw IPs; unique-visitor counts need a stable id. A secret salt prevents reversing the 2^32 IPv4 space by brute force."
+    alternatives: ["Store IPs encrypted (still personal data, key management burden)", "Drop unique visitors (loses a requested metric)", "Cookies (changes client behaviour, consent implications)"]
+  - id: ADR-006
+    title: Fix BUG-101 test-first, before wiring analytics
+    decision: "Write the regression test as its own task, then fix resolve() ordering, then add events."
+    rationale: "Proves the bug exists and is fixed; prevents the new analytics from inheriting the defect."
+    alternatives: ["Fix and test in one change (no evidence the test would have caught the bug)"]

@@ -1,0 +1,38 @@
+goal: "Per-link click analytics without storing personal data, and clicks counted only on successful redirects"
+rationale: >
+  Two changes share one blast radius (the redirect path), so they are delivered
+  together: fixing BUG-101 first gives the analytics a correct event source.
+  'Unique visitors' and 'no raw IPs' conflict unless identity is pseudonymised,
+  which needs the requester's decision.
+functional:
+  - "Each successful redirect records a click event (timestamp, referrer host, pseudonymous visitor id)"
+  - "GET /api/v1/links/{code}/stats returns total_clicks, unique_visitors, clicks_by_day (30 days), top_referrers (5)"
+  - "BUG-101: expired links return 410 without incrementing click_count or recording events"
+  - "Deleting a link deletes its click events"
+non_functional:
+  - "No raw IP address or user agent persisted; visitor id = truncated salted SHA-256; referrer reduced to host"
+  - "Schema upgraded in place by an additive, transactional migration (schema v2)"
+  - "Existing endpoints' request/response shapes unchanged (backward compatible)"
+acceptance_criteria:
+  - "Regression test for BUG-101 fails before the fix and passes after it"
+  - "Stats endpoint returns correct aggregates for a known sequence of clicks; 404 for unknown codes"
+  - "Migration applies once on an existing v1 database and is a no-op on restart"
+  - "Existing v1 test-suite passes unchanged"
+  - "Security scan shows no high findings; no PII columns in migrations"
+out_of_scope:
+  - "Retention / purge of click events (tracked as follow-up)"
+  - "Dashboard UI"
+keywords: [click, expired, resolve, redirect, analytics]
+touches: [shortener.link_service, shortener.db]
+flags: []
+clarifications:
+  - id: visitor-identity
+    question: "Unique visitors need a stable identity but raw IPs are forbidden. Use a salted hash of IP+user-agent, or drop unique visitors?"
+    default: salted-hash
+    options: [salted-hash, drop-unique-visitors]
+    covers: []
+  - id: retention
+    question: "How long must click events be retained?"
+    default: unbounded-documented
+    options: [unbounded-documented, 90-days, 1-year]
+    covers: []

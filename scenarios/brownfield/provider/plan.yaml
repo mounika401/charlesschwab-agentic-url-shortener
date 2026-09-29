@@ -1,0 +1,47 @@
+rationale: >
+  Migration first (everything else reads the new table). The BUG-101 regression
+  test and the analytics module are independent and run in parallel. The fix
+  depends on both: it must make the regression test pass and route successful
+  clicks into analytics. The HTTP endpoint comes last so the public surface only
+  changes once the data behind it is correct.
+tasks:
+  - id: B1
+    title: Schema v2 migration (click_events)
+    description: "Additive, transactional migration 2 with FK cascade and (code, occurred_at) index."
+    depends_on: []
+    write_scope: [shortener/db.py]
+    targeted_tests: [tests/shortener/test_persistence.py]
+    risk: high
+    estimate: 1
+  - id: B2
+    title: Regression test for BUG-101 (test-first)
+    description: "Tests that an expired link neither increments click_count nor records events. Expected to FAIL until B4 lands, so it is not a gate for this task."
+    depends_on: [B1]
+    write_scope: [tests/shortener/test_bug101_regression.py]
+    targeted_tests: []
+    risk: low
+    estimate: 0.5
+  - id: B3
+    title: Analytics module
+    description: "ClickContext, salted visitor hash, referrer host reduction, AnalyticsRepository record/stats, salt setting."
+    depends_on: [B1]
+    write_scope: [shortener/analytics.py, shortener/config.py, tests/shortener/test_analytics.py]
+    targeted_tests: [tests/shortener/test_analytics.py]
+    risk: medium
+    estimate: 2
+  - id: B4
+    title: Fix BUG-101 and record clicks on successful redirects
+    description: "Check expiry before incrementing; record analytics event only after a successful resolve; stats passthrough."
+    depends_on: [B2, B3]
+    write_scope: [shortener/link_service.py]
+    targeted_tests: [tests/shortener/test_bug101_regression.py, tests/shortener/test_link_service.py]
+    risk: medium
+    estimate: 1
+  - id: B5
+    title: Stats endpoint and version 1.1.0
+    description: "GET /api/v1/links/{code}/stats, response schemas, pass ClickContext from the request, bump version."
+    depends_on: [B4]
+    write_scope: [shortener/app.py, shortener/schemas.py, shortener/__init__.py, tests/shortener/test_stats_api.py]
+    targeted_tests: [tests/shortener/test_stats_api.py, tests/shortener/test_api.py]
+    risk: medium
+    estimate: 1.5

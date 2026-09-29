@@ -1,0 +1,49 @@
+diff --git a/shortener/link_service.py b/shortener/link_service.py
+index 95fe9c9..a7504e1 100644
+--- a/shortener/link_service.py
++++ b/shortener/link_service.py
+@@ -16,6 +16,7 @@ from .errors import (
+ )
+ from .models import Link, utcnow
+ from .repository import LinkRepository
++from .safety import UrlSafetyPolicy
+ from .validation import validate_url
+ 
+ 
+@@ -25,10 +26,12 @@ class LinkService:
+         repository: LinkRepository,
+         settings: Settings,
+         analytics: AnalyticsRepository | None = None,
++        safety: UrlSafetyPolicy | None = None,
+     ) -> None:
+         self._repo = repository
+         self._settings = settings
+         self._analytics = analytics
++        self._safety = safety or UrlSafetyPolicy()
+ 
+     def create(
+         self,
+@@ -38,6 +41,7 @@ class LinkService:
+         now: datetime | None = None,
+     ) -> Link:
+         normalised = validate_url(url, self._settings.max_url_length)
++        self._safety.check(normalised)
+         created_at = now or utcnow()
+         expires_at = created_at + timedelta(seconds=ttl_seconds) if ttl_seconds else None
+ 
+diff --git a/tests/shortener/test_link_service.py b/tests/shortener/test_link_service.py
+index e220a96..c9d37b9 100644
+--- a/tests/shortener/test_link_service.py
++++ b/tests/shortener/test_link_service.py
+@@ -46,3 +46,11 @@ def test_unknown_code(service):
+         service.resolve("missing")
+     with pytest.raises(LinkNotFoundError):
+         service.delete("missing")
++
++
++def test_create_rejects_unsafe_destinations(service):
++    from shortener.errors import UnsafeUrlError
++
++    for url in ("http://169.254.169.254/latest", "https://user:pw@example.com/", "http://localhost/admin"):
++        with pytest.raises(UnsafeUrlError):
++            service.create(url)

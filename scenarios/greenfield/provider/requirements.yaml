@@ -1,0 +1,43 @@
+goal: "HTTP service that creates, resolves, inspects and deletes short links, with optional vanity codes and expiry"
+rationale: >
+  The brief is well-defined apart from two behavioural choices the requester must
+  own (redirect permanence and delete semantics); everything else maps directly to
+  functional requirements with testable acceptance criteria.
+functional:
+  - "POST /api/v1/links accepts {url, custom_alias?, ttl_seconds?} and returns code, short_url, url, created_at, expires_at, click_count"
+  - "GET /{code} redirects to the destination and increments the link's click counter"
+  - "Custom aliases: 3-32 chars [A-Za-z0-9_-], reserved words rejected, duplicates rejected"
+  - "Links with ttl_seconds stop redirecting once expired (HTTP 410)"
+  - "GET /api/v1/links/{code} returns link metadata; DELETE removes it"
+  - "GET /healthz (liveness) and GET /readyz (readiness incl. schema version)"
+non_functional:
+  - "Only absolute http/https URLs up to 2048 chars are accepted"
+  - "Random codes from a CSPRNG, base62, 7 chars (not sequential / not enumerable)"
+  - "Persistence survives restart without an external database (SQLite, versioned migrations)"
+  - "Redirect p99 < 50 ms at 100 rps on one node (single indexed primary-key lookup + atomic counter update)"
+  - "Every response carries X-Request-ID for traceability"
+acceptance_criteria:
+  - "Creating a link returns 201 and the short URL redirects with the configured status to the original URL"
+  - "Duplicate custom alias returns 409; invalid alias or URL returns 422"
+  - "Expired link returns 410; unknown code returns 404"
+  - "Click count increases by one per successful redirect, with no lost updates under concurrency"
+  - "Schema migrations are idempotent across restarts"
+  - "All endpoints documented in a generated API reference"
+out_of_scope:
+  - "Authentication / multi-tenancy (internal network only in v1)"
+  - "Analytics beyond a total click counter"
+  - "Horizontal scaling"
+keywords: [link, redirect, alias, expiry]
+touches: []
+flags: []
+clarifications:
+  - id: redirect-status
+    question: "Should redirects be permanent (301/308) or temporary (302/307)?"
+    default: "307"
+    options: ["301", "302", "307", "308"]
+    covers: []
+  - id: delete-semantics
+    question: "Should DELETE hard-delete a link or tombstone it so the code is never reused?"
+    default: hard-delete
+    options: [hard-delete, tombstone]
+    covers: []

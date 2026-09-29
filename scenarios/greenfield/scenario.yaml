@@ -1,0 +1,9 @@
+name: greenfield
+type: greenfield
+title: "Greenfield - build a URL shortener service from a product brief"
+requested_by: product-owner
+requirement: requirement.md
+approvals: approvals.yaml
+baseline: []          # empty workspace (scaffold only)
+min_tests: 40
+materialize_flags: []

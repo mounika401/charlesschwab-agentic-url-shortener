@@ -1,0 +1,84 @@
+diff --git a/shortener/app.py b/shortener/app.py
+index e09a0ee..040249b 100644
+--- a/shortener/app.py
++++ b/shortener/app.py
+@@ -80,6 +80,7 @@ def create_app(settings: Settings | None = None, db: Database | None = None) ->
+         LinkRepository(db), settings, AnalyticsRepository(db, settings.analytics_salt), safety
+     )
+     create_limiter = _limiter(settings.create_rate_limit_per_minute)
++    redirect_limiter = _limiter(settings.redirect_rate_limit_per_minute)
+ 
+     app = FastAPI(title="URL Shortener", version="1.2.0")
+     app.state.settings = settings
+@@ -157,9 +158,10 @@ def create_app(settings: Settings | None = None, db: Database | None = None) ->
+     @app.get(
+         "/{code}",
+         tags=["redirect"],
+-        responses={404: {"model": ErrorResponse}, 410: {"model": ErrorResponse}},
++        responses={404: {"model": ErrorResponse}, 410: {"model": ErrorResponse}, 429: {"model": ErrorResponse}},
+     )
+     def redirect(code: str, request: Request) -> RedirectResponse:
++        _enforce(redirect_limiter, request)
+         ctx = ClickContext(
+             client_ip=request.client.host if request.client else None,
+             user_agent=request.headers.get("user-agent"),
+diff --git a/shortener/config.py b/shortener/config.py
+index 16c5525..6f88b07 100644
+--- a/shortener/config.py
++++ b/shortener/config.py
+@@ -39,6 +39,7 @@ class Settings:
+     analytics_salt: str = field(default_factory=lambda: secrets.token_hex(16), repr=False)
+     # Abuse controls. A limit of 0 disables that limiter.
+     create_rate_limit_per_minute: int = 30
++    redirect_rate_limit_per_minute: int = 300
+     blocked_domains: tuple[str, ...] = ()
+ 
+     @classmethod
+@@ -55,6 +56,9 @@ class Settings:
+             create_rate_limit_per_minute=_int_env(
+                 "SHORTENER_CREATE_RATE_LIMIT", cls.create_rate_limit_per_minute
+             ),
++            redirect_rate_limit_per_minute=_int_env(
++                "SHORTENER_REDIRECT_RATE_LIMIT", cls.redirect_rate_limit_per_minute
++            ),
+             blocked_domains=_csv_env("SHORTENER_BLOCKED_DOMAINS"),
+             **({"analytics_salt": salt} if salt else {}),
+         )
+diff --git a/tests/shortener/test_redirect_ratelimit.py b/tests/shortener/test_redirect_ratelimit.py
+new file mode 100644
+index 0000000..b036c9f
+--- /dev/null
++++ b/tests/shortener/test_redirect_ratelimit.py
+@@ -0,0 +1,32 @@
++"""Redirect rate limiting (added after the release-review change request)."""
++
++from fastapi.testclient import TestClient
++
++from shortener.app import create_app
++from shortener.config import Settings
++from shortener.db import Database
++
++
++def make_client(**overrides) -> TestClient:
++    settings = Settings(database_path=":memory:", base_url="http://sho.rt", **overrides)
++    return TestClient(create_app(settings, Database(":memory:")), follow_redirects=False)
++
++
++def test_redirects_are_rate_limited_per_client():
++    client = make_client(redirect_rate_limit_per_minute=3)
++    code = client.post("/api/v1/links", json={"url": "https://example.com"}).json()["code"]
++    assert [client.get(f"/{code}").status_code for _ in range(4)] == [307, 307, 307, 429]
++
++
++def test_rate_limited_redirects_are_not_counted_as_clicks():
++    client = make_client(redirect_rate_limit_per_minute=1)
++    code = client.post("/api/v1/links", json={"url": "https://example.com"}).json()["code"]
++    client.get(f"/{code}"), client.get(f"/{code}")
++    assert client.get(f"/api/v1/links/{code}").json()["click_count"] == 1
++
++
++def test_management_api_is_not_affected_by_redirect_limit():
++    client = make_client(redirect_rate_limit_per_minute=1)
++    code = client.post("/api/v1/links", json={"url": "https://example.com"}).json()["code"]
++    client.get(f"/{code}"), client.get(f"/{code}")
++    assert client.get(f"/api/v1/links/{code}").status_code == 200

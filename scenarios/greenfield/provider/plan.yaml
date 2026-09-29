@@ -1,0 +1,57 @@
+rationale: >
+  Build bottom-up along the dependency direction of the layered design so every
+  task can be proven by its own tests the moment it lands: domain + config first,
+  then the two leaf utilities and persistence in parallel, then the service layer,
+  then HTTP. Dependencies are declared separately so their approval does not
+  block code work.
+tasks:
+  - id: G1
+    title: Domain model, errors and configuration
+    description: "Link dataclass with expiry rule, domain error hierarchy, Settings.from_env with fail-fast parsing, package entry point."
+    depends_on: []
+    write_scope: [shortener/__init__.py, shortener/__main__.py, shortener/config.py, shortener/errors.py,
+                  shortener/models.py, tests/shortener/test_config_models.py]
+    targeted_tests: [tests/shortener/test_config_models.py]
+    risk: low
+    estimate: 1
+  - id: G6
+    title: Declare runtime and test dependencies
+    description: "requirements.txt with allowlisted packages only."
+    depends_on: []
+    write_scope: [requirements.txt]
+    targeted_tests: []
+    risk: low
+    estimate: 0.5
+  - id: G2
+    title: Code generation and URL validation
+    description: "CSPRNG base62 codes, alias rules with reserved words, http(s)-only URL validation and normalisation."
+    depends_on: [G1]
+    write_scope: [shortener/codegen.py, shortener/validation.py, tests/shortener/test_units.py]
+    targeted_tests: [tests/shortener/test_units.py]
+    risk: low
+    estimate: 1
+  - id: G3
+    title: Persistence layer and schema v1
+    description: "Thread-safe SQLite wrapper, versioned migrations, LinkRepository with atomic click increment."
+    depends_on: [G1]
+    write_scope: [shortener/db.py, shortener/repository.py, tests/shortener/conftest.py,
+                  tests/shortener/test_persistence.py]
+    targeted_tests: [tests/shortener/test_persistence.py]
+    risk: medium
+    estimate: 2
+  - id: G4
+    title: Link service (business rules)
+    description: "Create with alias/TTL, bounded collision retry, resolve with expiry, delete."
+    depends_on: [G2, G3]
+    write_scope: [shortener/link_service.py, tests/shortener/test_link_service.py]
+    targeted_tests: [tests/shortener/test_link_service.py]
+    risk: low
+    estimate: 1.5
+  - id: G5
+    title: HTTP API
+    description: "FastAPI app factory, schemas, error mapping, request-id middleware, health/readiness."
+    depends_on: [G4]
+    write_scope: [shortener/app.py, shortener/schemas.py, tests/shortener/test_api.py]
+    targeted_tests: [tests/shortener/test_api.py]
+    risk: medium
+    estimate: 2

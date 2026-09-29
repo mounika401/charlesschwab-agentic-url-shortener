@@ -1,0 +1,9 @@
+name: brownfield
+type: brownfield
+title: "Brownfield - add per-link analytics and fix BUG-101 in the released v1 service"
+requested_by: product-owner
+requirement: requirement.md
+approvals: approvals.yaml
+baseline: [greenfield]   # starts from the greenfield release
+min_tests: 50
+materialize_flags: []

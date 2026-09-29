@@ -1,0 +1,31 @@
+# Recorded human decisions for the greenfield scenario.
+# The engine attributes each decision to the named approver; any checkpoint
+# not listed here falls back to the policy default (reject => safe-stop).
+approver: avinash.kanna
+decisions:
+  - match: {checkpoint: clarification}
+    decision: answer
+    answers:
+      redirect-status: "307"
+      delete-semantics: hard-delete
+    comment: "Temporary redirects so we can change destinations and keep counting clicks."
+
+  - match: {checkpoint: design_signoff}
+    decision: approve
+    comment: "Layering and SQLite choice are fine for v1; keep the repository interface swappable."
+
+  - match: {checkpoint: change_review, node: "impl:G3"}
+    decision: approve
+    comment: "Initial schema reviewed: links table, created_at index, no PII."
+
+  - match: {checkpoint: change_review, node: "impl:G6"}
+    decision: approve
+    comment: "Dependencies are on the allowlist."
+
+  - match: {checkpoint: change_review, node: "impl:G5"}
+    decision: approve
+    comment: "Public API surface matches the signed-off design; error mapping centralised."
+
+  - match: {checkpoint: release}
+    decision: approve
+    comment: "Readiness checklist green. Ship v1.0.0."

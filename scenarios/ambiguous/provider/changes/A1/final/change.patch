@@ -1,0 +1,69 @@
+diff --git a/shortener/config.py b/shortener/config.py
+index 89d6a1c..16c5525 100644
+--- a/shortener/config.py
++++ b/shortener/config.py
+@@ -12,6 +12,10 @@ import secrets
+ from dataclasses import dataclass, field
+ 
+ 
++def _csv_env(name: str) -> tuple[str, ...]:
++    return tuple(item.strip().lower() for item in os.environ.get(name, "").split(",") if item.strip())
++
++
+ def _int_env(name: str, default: int) -> int:
+     raw = os.environ.get(name)
+     if raw is None or raw.strip() == "":
+@@ -33,6 +37,9 @@ class Settings:
+     # is used: unique-visitor counts then reset on restart, which is safe but
+     # less useful. Set SHORTENER_ANALYTICS_SALT in production.
+     analytics_salt: str = field(default_factory=lambda: secrets.token_hex(16), repr=False)
++    # Abuse controls. A limit of 0 disables that limiter.
++    create_rate_limit_per_minute: int = 30
++    blocked_domains: tuple[str, ...] = ()
+ 
+     @classmethod
+     def from_env(cls) -> "Settings":
+@@ -45,5 +52,9 @@ class Settings:
+             max_code_allocation_attempts=_int_env(
+                 "SHORTENER_MAX_CODE_ATTEMPTS", cls.max_code_allocation_attempts
+             ),
++            create_rate_limit_per_minute=_int_env(
++                "SHORTENER_CREATE_RATE_LIMIT", cls.create_rate_limit_per_minute
++            ),
++            blocked_domains=_csv_env("SHORTENER_BLOCKED_DOMAINS"),
+             **({"analytics_salt": salt} if salt else {}),
+         )
+diff --git a/shortener/errors.py b/shortener/errors.py
+index 1577d9e..d853774 100644
+--- a/shortener/errors.py
++++ b/shortener/errors.py
+@@ -27,3 +27,13 @@ class LinkExpiredError(ShortenerError):
+ 
+ class CodeSpaceExhaustedError(ShortenerError):
+     """Random code allocation kept colliding; signals the code length is too small."""
++
++
++class UnsafeUrlError(ShortenerError):
++    """Well-formed URL that policy forbids publishing (internal hosts, credentials, blocklist)."""
++
++
++class RateLimitedError(ShortenerError):
++    def __init__(self, retry_after_seconds: float) -> None:
++        super().__init__(f"rate limit exceeded; retry after {retry_after_seconds:.1f}s")
++        self.retry_after_seconds = retry_after_seconds
+diff --git a/tests/shortener/test_config_models.py b/tests/shortener/test_config_models.py
+index 072910c..4169308 100644
+--- a/tests/shortener/test_config_models.py
++++ b/tests/shortener/test_config_models.py
+@@ -26,3 +26,11 @@ def test_link_expiry_boundary():
+     assert not link.is_expired(created + timedelta(seconds=9))
+     assert link.is_expired(created + timedelta(seconds=10))
+     assert not Link("abc", "https://example.com", created).is_expired()
++
++
++def test_abuse_control_settings_from_env(monkeypatch):
++    monkeypatch.setenv("SHORTENER_CREATE_RATE_LIMIT", "5")
++    monkeypatch.setenv("SHORTENER_BLOCKED_DOMAINS", "Evil.test, ,bad.example")
++    settings = Settings.from_env()
++    assert settings.create_rate_limit_per_minute == 5
++    assert settings.blocked_domains == ("evil.test", "bad.example")

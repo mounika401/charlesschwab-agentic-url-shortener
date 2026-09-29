@@ -1,0 +1,9 @@
+[project]
+name = "agentic-url-shortener"
+version = "1.0.0"
+description = "Governed agentic SDLC orchestrator, demonstrated on a URL shortener"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

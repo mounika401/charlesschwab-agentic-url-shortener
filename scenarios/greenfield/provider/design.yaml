@@ -1,0 +1,26 @@
+endpoints:
+  - {method: POST, path: /api/v1/links, status: 201, notes: "create; 409 alias taken; 422 invalid"}
+  - {method: GET, path: "/api/v1/links/{code}", status: 200, notes: "metadata; 404 unknown"}
+  - {method: DELETE, path: "/api/v1/links/{code}", status: 204, notes: "hard delete"}
+  - {method: GET, path: "/{code}", status: 307, notes: "redirect; 404 unknown; 410 expired"}
+  - {method: GET, path: /healthz, status: 200, notes: liveness}
+  - {method: GET, path: /readyz, status: 200, notes: "readiness + schema version"}
+data_model:
+  - {table: links, change: "new: code PK, url, created_at (indexed), expires_at, click_count"}
+adrs:
+  - id: ADR-001
+    title: SQLite behind a repository interface
+    decision: "Use SQLite (WAL) with versioned forward-only migrations, accessed only through LinkRepository."
+    rationale: "Meets 'survive restart, no external DB, runs on a laptop'. A primary-key lookup is well under 1 ms, far inside the 50 ms p99 budget. The repository boundary keeps a later move to Postgres a contained change."
+    alternatives: ["In-memory dict (loses data on restart)", "PostgreSQL (violates the no-external-DB constraint)", "Key-value file store (no transactions for counters)"]
+    consequences: "Single-writer; horizontal scaling needs a different store (out of scope for v1)."
+  - id: ADR-002
+    title: Random base62 codes from a CSPRNG
+    decision: "7-character codes drawn with secrets.choice over [A-Za-z0-9]; bounded retry on collision."
+    rationale: "3.5e12 code space makes collisions negligible at internal volumes and codes cannot be enumerated, satisfying 'not guessable in sequence'."
+    alternatives: ["Auto-increment id encoded in base62 (enumerable, leaks volume)", "Hash of URL (same URL always maps to same code; collisions need handling anyway)"]
+  - id: ADR-003
+    title: 307 Temporary Redirect
+    decision: "Redirect with 307 as chosen by the requester at clarification."
+    rationale: "Permanent redirects are cached by browsers, so later clicks would bypass the service: destinations could not change and click counts would be wrong."
+    alternatives: ["301/308 permanent (cacheable, breaks counting)", "302 (method may change to GET on POST)"]

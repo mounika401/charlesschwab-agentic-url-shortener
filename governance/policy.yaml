@@ -1,0 +1,58 @@
+# Governance policy for the agentic SDLC orchestrator.
+#
+# This file is the single source of truth for what agents may do on their own.
+# It is itself a protected path: no agent change set may modify it.
+version: 1
+
+autonomy:
+  # Nodes whose risk exceeds this level need a human approval before their
+  # changes are committed. low | medium | high
+  max_auto_approve_risk: low
+  max_parallel_nodes: 4
+
+approvals:
+  # Named checkpoints that can never be auto-approved, whatever the risk.
+  always_required: [clarification, design_signoff, release]
+  # Detected change types that force a human checkpoint on the node producing them.
+  actions_requiring_approval: [schema_migration, new_dependency, deletion]
+  # If an approver gives no decision for a checkpoint, fail safe.
+  default_on_no_decision: reject
+
+change_control:
+  protected_paths: ["orchestrator/**", "governance/**", ".git/**", ".github/**", "scenarios/**"]
+  max_files_per_change: 10
+  max_lines_per_change: 600
+  migration_paths: ["shortener/db.py"]
+  dependency_files: ["requirements.txt", "pyproject.toml"]
+  public_api_paths: ["shortener/app.py", "shortener/schemas.py"]
+
+security:
+  secret_patterns:
+    - {name: aws_access_key, regex: 'AKIA[0-9A-Z]{16}'}
+    - {name: private_key, regex: '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'}
+    - {name: live_api_key, regex: '\b(sk|rk|pk)_live_[0-9A-Za-z]{16,}'}
+    # Matches identifiers that merely *contain* a credential word (ADMIN_API_TOKEN, db_password).
+    - {name: hardcoded_credential, regex: '(?i)\w*(password|passwd|secret|api_?key|token|salt)\w*\s*[:=]\s*["''][A-Za-z0-9_\-/+]{12,}["'']'}
+  forbidden_code:
+    - {name: eval, regex: '\beval\(', severity: high}
+    - {name: exec, regex: '\bexec\(', severity: high}
+    - {name: pickle_load, regex: '\bpickle\.loads?\(', severity: high}
+    - {name: shell_true, regex: 'shell\s*=\s*True', severity: high}
+    - {name: tls_verify_disabled, regex: 'verify\s*=\s*False', severity: high}
+    - {name: sql_fstring, regex: '\.execute\(\s*f["'']', severity: high}
+    - {name: unsafe_yaml, regex: '\byaml\.load\((?![^)]*SafeLoader)', severity: medium}
+    - {name: debug_print, regex: '^\s*print\(', severity: low}
+  dependency_allowlist: [fastapi, uvicorn, pydantic, httpx, pytest, pyyaml]
+
+compliance:
+  # Columns that would persist raw personal data. Checked in migration DDL.
+  forbidden_pii_columns: [ip_address, client_ip, raw_ip, email, phone, user_agent]
+  # Every plan task that changes product code must name the tests that prove it.
+  require_targeted_tests: true
+
+retries:
+  default_max_attempts: 3
+
+safe_stop:
+  on_policy_violation: true
+  on_approval_rejected: true

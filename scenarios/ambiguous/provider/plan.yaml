@@ -1,0 +1,56 @@
+rationale: >
+  Configuration and error types first (everything else refers to them); the
+  rate limiter has no dependencies and runs in parallel with that. The safety
+  policy is enforced in the service layer (so every caller gets it, not only
+  HTTP), and the HTTP layer wires both controls last. Redirect limiting exists
+  only if the spec carries the redirect_rate_limit flag.
+tasks:
+  - id: A1
+    title: Abuse-control settings and error types
+    description: "create/redirect limits and blocklist settings parsed from env; UnsafeUrlError, RateLimitedError(retry_after)."
+    depends_on: []
+    write_scope: [shortener/config.py, shortener/errors.py, tests/shortener/test_config_models.py]
+    targeted_tests: [tests/shortener/test_config_models.py]
+    risk: low
+    estimate: 0.5
+  - id: A3
+    title: Token-bucket rate limiter
+    description: "Thread-safe, injectable clock, LRU-bounded keys, retry-after computation."
+    depends_on: []
+    write_scope: [shortener/ratelimit.py, tests/shortener/test_ratelimit.py]
+    targeted_tests: [tests/shortener/test_ratelimit.py]
+    risk: low
+    estimate: 1
+  - id: A2
+    title: Destination safety policy
+    description: "UrlSafetyPolicy: credentials, internal hosts, non-global IPs, own host, blocklist with label-boundary matching."
+    depends_on: [A1]
+    write_scope: [shortener/safety.py, tests/shortener/test_safety.py]
+    targeted_tests: [tests/shortener/test_safety.py]
+    risk: medium
+    estimate: 1
+  - id: A4
+    title: Enforce destination safety in the service layer
+    description: "LinkService.create runs the safety policy after syntax validation and before persisting."
+    depends_on: [A2]
+    write_scope: [shortener/link_service.py, tests/shortener/test_link_service.py]
+    targeted_tests: [tests/shortener/test_link_service.py]
+    risk: medium
+    estimate: 0.5
+  - id: A5
+    title: Wire creation rate limit and safety into the API (v1.2.0)
+    description: "Build policy from settings (own host from base_url), 429 + Retry-After mapping, create limiter keyed by peer address."
+    depends_on: [A3, A4]
+    write_scope: [shortener/app.py, shortener/__init__.py, tests/shortener/test_api_safety.py]
+    targeted_tests: [tests/shortener/test_api_safety.py, tests/shortener/test_api.py]
+    risk: medium
+    estimate: 1
+  - id: A6
+    title: Per-client redirect rate limit
+    description: "Redirect limiter applied before resolve (throttled requests are not clicks); configurable, 0 disables."
+    depends_on: [A5]
+    write_scope: [shortener/app.py, shortener/config.py, tests/shortener/test_redirect_ratelimit.py]
+    targeted_tests: [tests/shortener/test_redirect_ratelimit.py, tests/shortener/test_stats_api.py]
+    risk: medium
+    estimate: 1
+    when: redirect_rate_limit

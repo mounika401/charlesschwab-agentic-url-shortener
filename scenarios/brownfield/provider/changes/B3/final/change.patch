@@ -1,0 +1,177 @@
+diff --git a/shortener/analytics.py b/shortener/analytics.py
+new file mode 100644
+index 0000000..e0d8ec0
+--- /dev/null
++++ b/shortener/analytics.py
+@@ -0,0 +1,85 @@
++"""Click analytics: privacy-preserving event capture and aggregation.
++
++Design notes
++* Events are appended to ``click_events``; aggregates are computed on read.
++  At prototype scale this is simpler and always consistent. At high volume the
++  same interface can be backed by a stream + rollup table (see ADR-002).
++* Visitors are identified by ``sha256(salt | ip | user-agent)`` truncated to 16
++  hex chars. The salt is secret, so hashes cannot be reversed by brute-forcing
++  the IPv4 space.
++"""
++
++from __future__ import annotations
++
++import hashlib
++from dataclasses import dataclass, field
++from datetime import date, datetime
++from urllib.parse import urlsplit
++
++from .db import Database
++
++
++@dataclass(frozen=True)
++class ClickContext:
++    """What the transport layer knows about a redirect request."""
++
++    client_ip: str | None = None
++    user_agent: str | None = None
++    referrer: str | None = None
++
++
++@dataclass(frozen=True)
++class LinkStats:
++    code: str
++    total_clicks: int
++    unique_visitors: int
++    clicks_by_day: list[tuple[date, int]] = field(default_factory=list)
++    top_referrers: list[tuple[str, int]] = field(default_factory=list)
++
++
++def visitor_hash(salt: str, ctx: ClickContext) -> str:
++    material = f"{salt}|{ctx.client_ip or '-'}|{ctx.user_agent or '-'}".encode()
++    return hashlib.sha256(material).hexdigest()[:16]
++
++
++def referrer_host(referrer: str | None) -> str | None:
++    if not referrer:
++        return None
++    host = urlsplit(referrer).hostname
++    return host.lower() if host else None
++
++
++class AnalyticsRepository:
++    def __init__(self, db: Database, salt: str) -> None:
++        self._db = db
++        self._salt = salt
++
++    def record(self, code: str, ctx: ClickContext, occurred_at: datetime) -> None:
++        with self._db.transaction() as conn:
++            conn.execute(
++                "INSERT INTO click_events (code, occurred_at, referrer_host, visitor_hash) VALUES (?, ?, ?, ?)",
++                (code, occurred_at.isoformat(), referrer_host(ctx.referrer), visitor_hash(self._salt, ctx)),
++            )
++
++    def stats(self, code: str, top_n: int = 5, days: int = 30) -> LinkStats:
++        totals = self._db.query(
++            "SELECT COUNT(*) AS total, COUNT(DISTINCT visitor_hash) AS uniq FROM click_events WHERE code = ?",
++            (code,),
++        )[0]
++        by_day = self._db.query(
++            "SELECT substr(occurred_at, 1, 10) AS day, COUNT(*) AS n FROM click_events"
++            " WHERE code = ? GROUP BY day ORDER BY day DESC LIMIT ?",
++            (code, days),
++        )
++        referrers = self._db.query(
++            "SELECT referrer_host AS host, COUNT(*) AS n FROM click_events"
++            " WHERE code = ? AND referrer_host IS NOT NULL GROUP BY host ORDER BY n DESC, host LIMIT ?",
++            (code, top_n),
++        )
++        return LinkStats(
++            code=code,
++            total_clicks=int(totals["total"]),
++            unique_visitors=int(totals["uniq"]),
++            clicks_by_day=[(date.fromisoformat(r["day"]), int(r["n"])) for r in reversed(by_day)],
++            top_referrers=[(r["host"], int(r["n"])) for r in referrers],
++        )
+diff --git a/shortener/config.py b/shortener/config.py
+index 8070d76..89d6a1c 100644
+--- a/shortener/config.py
++++ b/shortener/config.py
+@@ -8,7 +8,8 @@ globals.
+ from __future__ import annotations
+ 
+ import os
+-from dataclasses import dataclass
++import secrets
++from dataclasses import dataclass, field
+ 
+ 
+ def _int_env(name: str, default: int) -> int:
+@@ -28,9 +29,14 @@ class Settings:
+     code_length: int = 7
+     max_url_length: int = 2048
+     max_code_allocation_attempts: int = 5
++    # Secret used to hash visitor identity. If unset, a per-process random salt
++    # is used: unique-visitor counts then reset on restart, which is safe but
++    # less useful. Set SHORTENER_ANALYTICS_SALT in production.
++    analytics_salt: str = field(default_factory=lambda: secrets.token_hex(16), repr=False)
+ 
+     @classmethod
+     def from_env(cls) -> "Settings":
++        salt = os.environ.get("SHORTENER_ANALYTICS_SALT")
+         return cls(
+             database_path=os.environ.get("SHORTENER_DB_PATH", cls.database_path),
+             base_url=os.environ.get("SHORTENER_BASE_URL", cls.base_url).rstrip("/"),
+@@ -39,4 +45,5 @@ class Settings:
+             max_code_allocation_attempts=_int_env(
+                 "SHORTENER_MAX_CODE_ATTEMPTS", cls.max_code_allocation_attempts
+             ),
++            **({"analytics_salt": salt} if salt else {}),
+         )
+diff --git a/tests/shortener/test_analytics.py b/tests/shortener/test_analytics.py
+new file mode 100644
+index 0000000..4073deb
+--- /dev/null
++++ b/tests/shortener/test_analytics.py
+@@ -0,0 +1,45 @@
++from datetime import date, datetime, timezone
++
++from shortener.analytics import AnalyticsRepository, ClickContext, referrer_host, visitor_hash
++from shortener.models import Link
++from shortener.repository import LinkRepository
++
++
++def test_visitor_hash_is_salted_and_stable():
++    ctx = ClickContext("203.0.113.9", "curl/8")
++    assert visitor_hash("s1", ctx) == visitor_hash("s1", ctx)
++    assert visitor_hash("s1", ctx) != visitor_hash("s2", ctx)
++    assert "203.0.113.9" not in visitor_hash("s1", ctx)
++
++
++def test_referrer_is_reduced_to_host():
++    assert referrer_host("https://News.Example.com/a?b=c") == "news.example.com"
++    assert referrer_host(None) is None
++    assert referrer_host("not a url") is None
++
++
++def test_stats_aggregation(db):
++    LinkRepository(db).insert(Link("abc", "https://example.com", datetime.now(timezone.utc)))
++    analytics = AnalyticsRepository(db, salt="test")
++    day1 = datetime(2026, 3, 1, 10, tzinfo=timezone.utc)
++    day2 = datetime(2026, 3, 2, 10, tzinfo=timezone.utc)
++    alice = ClickContext("198.51.100.1", "firefox", "https://t.co/x")
++    bob = ClickContext("198.51.100.2", "chrome", "https://news.example.com/")
++    analytics.record("abc", alice, day1)
++    analytics.record("abc", alice, day1)
++    analytics.record("abc", bob, day2)
++    analytics.record("abc", ClickContext(), day2)
++
++    stats = analytics.stats("abc")
++    assert stats.total_clicks == 4
++    assert stats.unique_visitors == 3
++    assert stats.clicks_by_day == [(date(2026, 3, 1), 2), (date(2026, 3, 2), 2)]
++    assert stats.top_referrers == [("t.co", 2), ("news.example.com", 1)]
++
++
++def test_events_are_deleted_with_link(db):
++    repo = LinkRepository(db)
++    repo.insert(Link("gone", "https://example.com", datetime.now(timezone.utc)))
++    AnalyticsRepository(db, "s").record("gone", ClickContext(), datetime.now(timezone.utc))
++    repo.delete("gone")
++    assert db.query("SELECT COUNT(*) AS n FROM click_events")[0]["n"] == 0

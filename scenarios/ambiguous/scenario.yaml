@@ -1,0 +1,9 @@
+name: ambiguous
+type: ambiguous
+title: "Ambiguous - 'make it safe for public use' (clarify, decide, re-plan on change request)"
+requested_by: head-of-product
+requirement: requirement.md
+approvals: approvals.yaml
+baseline: [greenfield, brownfield]
+min_tests: 80
+materialize_flags: [url_safety, create_rate_limit, redirect_rate_limit]

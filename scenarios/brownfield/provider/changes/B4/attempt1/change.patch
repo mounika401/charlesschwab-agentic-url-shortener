@@ -1,0 +1,58 @@
+diff --git a/shortener/link_service.py b/shortener/link_service.py
+index 55cb8cf..a873eca 100644
+--- a/shortener/link_service.py
++++ b/shortener/link_service.py
+@@ -5,6 +5,7 @@ from __future__ import annotations
+ from datetime import datetime, timedelta
+ 
+ from . import codegen
++from .analytics import AnalyticsRepository, ClickContext, LinkStats
+ from .config import Settings
+ from .errors import (
+     AliasTakenError,
+@@ -19,9 +20,15 @@ from .validation import validate_url
+ 
+ 
+ class LinkService:
+-    def __init__(self, repository: LinkRepository, settings: Settings) -> None:
++    def __init__(
++        self,
++        repository: LinkRepository,
++        settings: Settings,
++        analytics: AnalyticsRepository | None = None,
++    ) -> None:
+         self._repo = repository
+         self._settings = settings
++        self._analytics = analytics
+ 
+     def create(
+         self,
+@@ -56,14 +63,26 @@ class LinkService:
+             raise LinkNotFoundError(code)
+         return link
+ 
+-    def resolve(self, code: str, now: datetime | None = None) -> Link:
+-        """Return the destination for a redirect and record the click."""
++    def resolve(self, code: str, ctx: ClickContext | None = None, now: datetime | None = None) -> Link:
++        """Return the destination for a redirect and record the click.
++
++        Expiry is checked *before* any click is recorded (BUG-101): an expired
++        link is a dead link and must not accumulate analytics.
++        """
+         link = self.get(code)
+         self._repo.increment_clicks(code)
+         if link.is_expired(now):
+             raise LinkExpiredError(code)
++        if self._analytics is not None:
++            self._analytics.record(code, ctx or ClickContext(), now or utcnow())
+         return link
+ 
+     def delete(self, code: str) -> None:
+         if not self._repo.delete(code):
+             raise LinkNotFoundError(code)
++
++    def stats(self, code: str) -> LinkStats:
++        self.get(code)  # 404 for unknown codes rather than empty stats
++        if self._analytics is None:
++            raise RuntimeError("analytics is not configured")
++        return self._analytics.stats(code)

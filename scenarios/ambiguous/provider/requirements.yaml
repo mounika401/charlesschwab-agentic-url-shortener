@@ -1,0 +1,50 @@
+goal: "Harden the public-facing shortener against malicious destinations and automated abuse without changing behaviour for legitimate clients"
+rationale: >
+  'Safe', 'robust' and 'public use' carry no measurable criteria. The request
+  mentions two concrete fears (phishing, being scripted against), which map to
+  destination safety and rate limiting. Limits, state model and fail-mode are
+  business decisions, so they are raised as clarifications with conservative
+  defaults instead of being guessed.
+functional:
+  - "Reject destinations that are unsafe to publish behind our domain with 422 UnsafeUrlError"
+non_functional:
+  - "Checks are syntactic only (no DNS lookups from the request path)"
+  - "Existing links keep resolving; controls apply to new link creation"
+acceptance_criteria:
+  - "Every unsafe-destination class has a test proving rejection and at least one legitimate URL per class still passes"
+  - "Existing v1.1 test-suite passes unchanged"
+  - "No high-severity security findings"
+out_of_scope:
+  - "Authentication / API keys (separate initiative)"
+  - "Reputation feeds (Safe Browsing) - requires network calls and a vendor decision"
+keywords: [create, url, validate, safety, rate]
+touches: [shortener.link_service, shortener.app, shortener.validation]
+flags: []
+clarifications:
+  - id: threat-scope
+    question: "'Safe for public use' - which abuse classes are in scope for launch?"
+    default: destinations-and-creation-flooding
+    options: [destinations-only, destinations-and-creation-flooding, everything-incl-reputation-feeds]
+    covers: [safe, safer, public use]
+    effects:
+      destinations-and-creation-flooding:
+        flags: [url_safety, create_rate_limit]
+        functional:
+          - "Block private/loopback/link-local/reserved IP literals, internal hostnames (localhost, *.local, *.internal), URLs with embedded credentials, our own domain (redirect loops) and an operator-configured domain blocklist"
+          - "Per-client token-bucket rate limit on link creation; 429 with Retry-After when exceeded"
+        acceptance_criteria:
+          - "Creating more than the configured number of links per minute from one client returns 429 with Retry-After"
+      destinations-only:
+        flags: [url_safety]
+        functional:
+          - "Block private/loopback/link-local/reserved IP literals, internal hostnames, embedded credentials, own domain and a configured blocklist"
+  - id: create-limit
+    question: "What creation rate is acceptable per client before throttling?"
+    default: "30 per minute, burst 30, configurable (0 disables)"
+    options: ["10 per minute", "30 per minute, burst 30, configurable (0 disables)", "100 per minute"]
+    covers: []
+  - id: limiter-state
+    question: "Is per-instance in-memory rate-limit state acceptable for launch, or is a shared store (Redis) required?"
+    default: in-memory-per-instance
+    options: [in-memory-per-instance, shared-redis]
+    covers: []

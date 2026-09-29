@@ -1,0 +1,32 @@
+approver: avinash.kanna
+decisions:
+  - match: {checkpoint: clarification}
+    decision: answer
+    answers:
+      visitor-identity: salted-hash
+      retention: unbounded-documented
+    comment: "Hash with a secret salt; retention policy is a follow-up with legal."
+
+  - match: {checkpoint: design_signoff}
+    decision: approve
+    comment: "Append-only events + read-time aggregation is right at this scale. ON DELETE CASCADE ok."
+
+  - match: {checkpoint: change_review, node: "impl:B1"}
+    decision: approve
+    comment: "Migration 2 is additive (new table + index), no PII columns, runs in a transaction."
+
+  - match: {checkpoint: change_review, node: "impl:B3"}
+    decision: approve
+    comment: "Only hashed visitor ids and referrer hosts persisted. Salt not hardcoded."
+
+  - match: {checkpoint: change_review, node: "impl:B4"}
+    decision: approve
+    comment: "Expiry checked before any side effect; regression test now green."
+
+  - match: {checkpoint: change_review, node: "impl:B5"}
+    decision: approve
+    comment: "New endpoint is additive; existing responses unchanged."
+
+  - match: {checkpoint: release}
+    decision: approve
+    comment: "BUG-101 regression test is green; existing contract unchanged. Ship 1.1.0."

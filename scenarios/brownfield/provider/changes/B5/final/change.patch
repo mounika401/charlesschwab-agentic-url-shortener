@@ -1,0 +1,140 @@
+diff --git a/shortener/__init__.py b/shortener/__init__.py
+index 3a3c6be..8aea017 100644
+--- a/shortener/__init__.py
++++ b/shortener/__init__.py
+@@ -7,4 +7,4 @@ Layers (outer -> inner):
+     db.py           connection management + versioned schema migrations
+ """
+ 
+-__version__ = "1.0.0"
++__version__ = "1.1.0"
+diff --git a/shortener/app.py b/shortener/app.py
+index 00bff1c..8135d98 100644
+--- a/shortener/app.py
++++ b/shortener/app.py
+@@ -8,6 +8,7 @@ import uuid
+ from fastapi import FastAPI, Request, Response
+ from fastapi.responses import JSONResponse, RedirectResponse
+ 
++from .analytics import AnalyticsRepository, ClickContext
+ from .config import Settings
+ from .db import Database
+ from .errors import (
+@@ -22,7 +23,14 @@ from .errors import (
+ from .link_service import LinkService
+ from .models import Link
+ from .repository import LinkRepository
+-from .schemas import CreateLinkRequest, ErrorResponse, LinkResponse
++from .schemas import (
++    CreateLinkRequest,
++    DailyClicks,
++    ErrorResponse,
++    LinkResponse,
++    ReferrerCount,
++    StatsResponse,
++)
+ 
+ logger = logging.getLogger("shortener")
+ 
+@@ -40,9 +48,9 @@ def create_app(settings: Settings | None = None, db: Database | None = None) ->
+     settings = settings or Settings.from_env()
+     db = db or Database(settings.database_path)
+     db.migrate()
+-    service = LinkService(LinkRepository(db), settings)
++    service = LinkService(LinkRepository(db), settings, AnalyticsRepository(db, settings.analytics_salt))
+ 
+-    app = FastAPI(title="URL Shortener", version="1.0.0")
++    app = FastAPI(title="URL Shortener", version="1.1.0")
+     app.state.settings = settings
+     app.state.db = db
+     app.state.service = service
+@@ -94,9 +102,25 @@ def create_app(settings: Settings | None = None, db: Database | None = None) ->
+         service.delete(code)
+         return Response(status_code=204)
+ 
++    @app.get("/api/v1/links/{code}/stats", response_model=StatsResponse, tags=["analytics"])
++    def link_stats(code: str) -> StatsResponse:
++        stats = service.stats(code)
++        return StatsResponse(
++            code=stats.code,
++            total_clicks=stats.total_clicks,
++            unique_visitors=stats.unique_visitors,
++            clicks_by_day=[DailyClicks(day=d, clicks=n) for d, n in stats.clicks_by_day],
++            top_referrers=[ReferrerCount(host=h, clicks=n) for h, n in stats.top_referrers],
++        )
++
+     @app.get("/{code}", tags=["redirect"], responses={404: {"model": ErrorResponse}, 410: {"model": ErrorResponse}})
+-    def redirect(code: str) -> RedirectResponse:
+-        link = service.resolve(code)
++    def redirect(code: str, request: Request) -> RedirectResponse:
++        ctx = ClickContext(
++            client_ip=request.client.host if request.client else None,
++            user_agent=request.headers.get("user-agent"),
++            referrer=request.headers.get("referer"),
++        )
++        link = service.resolve(code, ctx)
+         return RedirectResponse(link.url, status_code=307)
+ 
+     return app
+diff --git a/shortener/schemas.py b/shortener/schemas.py
+index b9c20e5..78a0ca3 100644
+--- a/shortener/schemas.py
++++ b/shortener/schemas.py
+@@ -2,7 +2,7 @@
+ 
+ from __future__ import annotations
+ 
+-from datetime import datetime
++from datetime import date, datetime
+ 
+ from pydantic import BaseModel, Field
+ 
+@@ -25,3 +25,21 @@ class LinkResponse(BaseModel):
+ class ErrorResponse(BaseModel):
+     error: str
+     detail: str
++
++
++class DailyClicks(BaseModel):
++    day: date
++    clicks: int
++
++
++class ReferrerCount(BaseModel):
++    host: str
++    clicks: int
++
++
++class StatsResponse(BaseModel):
++    code: str
++    total_clicks: int
++    unique_visitors: int
++    clicks_by_day: list[DailyClicks]
++    top_referrers: list[ReferrerCount]
+diff --git a/tests/shortener/test_stats_api.py b/tests/shortener/test_stats_api.py
+new file mode 100644
+index 0000000..04c36a0
+--- /dev/null
++++ b/tests/shortener/test_stats_api.py
+@@ -0,0 +1,21 @@
++def test_stats_endpoint_reports_clicks_referrers_and_visitors(client):
++    code = client.post("/api/v1/links", json={"url": "https://example.com"}).json()["code"]
++    client.get(f"/{code}", headers={"referer": "https://t.co/abc", "user-agent": "a"})
++    client.get(f"/{code}", headers={"referer": "https://t.co/def", "user-agent": "a"})
++    client.get(f"/{code}", headers={"user-agent": "b"})
++
++    body = client.get(f"/api/v1/links/{code}/stats").json()
++    assert body["total_clicks"] == 3
++    assert body["unique_visitors"] == 2
++    assert sum(d["clicks"] for d in body["clicks_by_day"]) == 3
++    assert body["top_referrers"] == [{"host": "t.co", "clicks": 2}]
++
++
++def test_stats_for_unknown_code_is_404(client):
++    assert client.get("/api/v1/links/missing/stats").status_code == 404
++
++
++def test_stats_for_new_link_are_empty(client):
++    code = client.post("/api/v1/links", json={"url": "https://example.com"}).json()["code"]
++    body = client.get(f"/api/v1/links/{code}/stats").json()
++    assert body == {"code": code, "total_clicks": 0, "unique_visitors": 0, "clicks_by_day": [], "top_referrers": []}

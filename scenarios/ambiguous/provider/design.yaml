@@ -1,0 +1,29 @@
+endpoints:
+  - {method: POST, path: /api/v1/links, status: 201, notes: "422 UnsafeUrlError; 429 RateLimitedError + Retry-After"}
+  - {method: GET, path: "/api/v1/links/{code}", status: 200, notes: unchanged}
+  - {method: DELETE, path: "/api/v1/links/{code}", status: 204, notes: unchanged}
+  - {method: GET, path: "/api/v1/links/{code}/stats", status: 200, notes: unchanged}
+  - {method: GET, path: "/{code}", status: 307, notes: unchanged}
+  - {method: GET, path: "/{code}", status: 307, notes: "429 when the per-client redirect limit is exceeded", when: redirect_rate_limit}
+  - {method: GET, path: /healthz, status: 200, notes: unchanged}
+  - {method: GET, path: /readyz, status: 200, notes: unchanged}
+data_model: []
+adrs:
+  - id: ADR-007
+    title: Syntactic destination safety policy
+    decision: "Reject credentials-in-URL, internal hostnames, non-global IP literals, own domain and a configured blocklist, without DNS resolution."
+    rationale: "Deterministic, fast, and never makes the service perform network I/O on behalf of clients. Covers the phishing and internal-target classes the requester named."
+    alternatives: ["Resolve DNS and check the resolved IP (latency, SSRF-by-resolver, still racy vs. rebinding)", "Third-party reputation API (vendor + network dependency; out of scope per clarification)"]
+    consequences: "Names that resolve to private IPs are not caught (residual risk, documented)."
+  - id: ADR-008
+    title: In-process token-bucket rate limiting keyed by peer address
+    decision: "TokenBucketLimiter per endpoint class; key = direct peer address; LRU-bounded memory."
+    rationale: "Requester accepted per-instance state for a single-node launch. Token bucket allows short bursts while bounding sustained rate. Keying on X-Forwarded-For without a trusted proxy would let clients choose their bucket."
+    alternatives: ["Redis shared limiter (correct across replicas, adds infrastructure now)", "Fixed window counter (boundary bursts of 2x limit)", "Reverse-proxy rate limiting (not in our control for this repo)"]
+    consequences: "N replicas => N x limit. Behind a proxy the client key must come from a trusted forwarding hop."
+  - id: ADR-009
+    title: Rate-limit redirects before resolving
+    decision: "Apply the redirect limiter before LinkService.resolve so throttled requests are not counted."
+    rationale: "Requested at release review to stop bots inflating analytics (threat T5)."
+    alternatives: ["Count then throttle (inflates analytics)", "Only throttle creation (leaves T5 open)"]
+    when: redirect_rate_limit

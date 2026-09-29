@@ -1,0 +1,176 @@
+diff --git a/shortener/__init__.py b/shortener/__init__.py
+index 8aea017..a37ef36 100644
+--- a/shortener/__init__.py
++++ b/shortener/__init__.py
+@@ -7,4 +7,4 @@ Layers (outer -> inner):
+     db.py           connection management + versioned schema migrations
+ """
+ 
+-__version__ = "1.1.0"
++__version__ = "1.2.0"
+diff --git a/shortener/app.py b/shortener/app.py
+index 8135d98..e09a0ee 100644
+--- a/shortener/app.py
++++ b/shortener/app.py
+@@ -3,7 +3,9 @@
+ from __future__ import annotations
+ 
+ import logging
++import math
+ import uuid
++from urllib.parse import urlsplit
+ 
+ from fastapi import FastAPI, Request, Response
+ from fastapi.responses import JSONResponse, RedirectResponse
+@@ -18,11 +20,15 @@ from .errors import (
+     InvalidUrlError,
+     LinkExpiredError,
+     LinkNotFoundError,
++    RateLimitedError,
+     ShortenerError,
++    UnsafeUrlError,
+ )
+ from .link_service import LinkService
+ from .models import Link
++from .ratelimit import TokenBucketLimiter
+ from .repository import LinkRepository
++from .safety import UrlSafetyPolicy
+ from .schemas import (
+     CreateLinkRequest,
+     DailyClicks,
+@@ -36,21 +42,46 @@ logger = logging.getLogger("shortener")
+ 
+ ERROR_STATUS: dict[type[ShortenerError], int] = {
+     InvalidUrlError: 422,
++    UnsafeUrlError: 422,
+     InvalidAliasError: 422,
+     AliasTakenError: 409,
+     LinkNotFoundError: 404,
+     LinkExpiredError: 410,
+     CodeSpaceExhaustedError: 503,
++    RateLimitedError: 429,
+ }
+ 
+ 
++def _limiter(per_minute: int) -> TokenBucketLimiter | None:
++    return TokenBucketLimiter(per_minute, 60.0) if per_minute > 0 else None
++
++
++def _client_key(request: Request) -> str:
++    # Direct peer address. Behind a proxy this must come from a trusted
++    # X-Forwarded-For hop instead; trusting the header blindly lets clients
++    # choose their own rate-limit bucket.
++    return request.client.host if request.client else "unknown"
++
++
++def _enforce(limiter: TokenBucketLimiter | None, request: Request) -> None:
++    if limiter is None:
++        return
++    decision = limiter.acquire(_client_key(request))
++    if not decision.allowed:
++        raise RateLimitedError(decision.retry_after_seconds)
++
++
+ def create_app(settings: Settings | None = None, db: Database | None = None) -> FastAPI:
+     settings = settings or Settings.from_env()
+     db = db or Database(settings.database_path)
+     db.migrate()
+-    service = LinkService(LinkRepository(db), settings, AnalyticsRepository(db, settings.analytics_salt))
++    safety = UrlSafetyPolicy(settings.blocked_domains, urlsplit(settings.base_url).hostname)
++    service = LinkService(
++        LinkRepository(db), settings, AnalyticsRepository(db, settings.analytics_salt), safety
++    )
++    create_limiter = _limiter(settings.create_rate_limit_per_minute)
+ 
+-    app = FastAPI(title="URL Shortener", version="1.1.0")
++    app = FastAPI(title="URL Shortener", version="1.2.0")
+     app.state.settings = settings
+     app.state.db = db
+     app.state.service = service
+@@ -76,7 +107,10 @@ def create_app(settings: Settings | None = None, db: Database | None = None) ->
+     async def domain_error(_: Request, exc: ShortenerError) -> JSONResponse:
+         status = ERROR_STATUS.get(type(exc), 400)
+         body = ErrorResponse(error=type(exc).__name__, detail=str(exc))
+-        return JSONResponse(status_code=status, content=body.model_dump())
++        headers = {}
++        if isinstance(exc, RateLimitedError):
++            headers["Retry-After"] = str(max(1, math.ceil(exc.retry_after_seconds)))
++        return JSONResponse(status_code=status, content=body.model_dump(), headers=headers)
+ 
+     @app.get("/healthz", tags=["ops"])
+     def healthz() -> dict:
+@@ -87,8 +121,15 @@ def create_app(settings: Settings | None = None, db: Database | None = None) ->
+         db.query("SELECT 1")
+         return {"status": "ready", "schema_version": db.schema_version()}
+ 
+-    @app.post("/api/v1/links", status_code=201, response_model=LinkResponse, tags=["links"])
+-    def create_link(body: CreateLinkRequest) -> LinkResponse:
++    @app.post(
++        "/api/v1/links",
++        status_code=201,
++        response_model=LinkResponse,
++        tags=["links"],
++        responses={422: {"model": ErrorResponse}, 429: {"model": ErrorResponse}},
++    )
++    def create_link(body: CreateLinkRequest, request: Request) -> LinkResponse:
++        _enforce(create_limiter, request)
+         link = service.create(body.url, body.custom_alias, body.ttl_seconds)
+         logger.info("link.created code=%s", link.code)
+         return to_response(link)
+@@ -113,7 +154,11 @@ def create_app(settings: Settings | None = None, db: Database | None = None) ->
+             top_referrers=[ReferrerCount(host=h, clicks=n) for h, n in stats.top_referrers],
+         )
+ 
+-    @app.get("/{code}", tags=["redirect"], responses={404: {"model": ErrorResponse}, 410: {"model": ErrorResponse}})
++    @app.get(
++        "/{code}",
++        tags=["redirect"],
++        responses={404: {"model": ErrorResponse}, 410: {"model": ErrorResponse}},
++    )
+     def redirect(code: str, request: Request) -> RedirectResponse:
+         ctx = ClickContext(
+             client_ip=request.client.host if request.client else None,
+diff --git a/tests/shortener/test_api_safety.py b/tests/shortener/test_api_safety.py
+new file mode 100644
+index 0000000..4bae201
+--- /dev/null
++++ b/tests/shortener/test_api_safety.py
+@@ -0,0 +1,38 @@
++from fastapi.testclient import TestClient
++
++from shortener.app import create_app
++from shortener.config import Settings
++from shortener.db import Database
++
++
++def make_client(**overrides) -> TestClient:
++    settings = Settings(database_path=":memory:", base_url="http://sho.rt", **overrides)
++    return TestClient(create_app(settings, Database(":memory:")), follow_redirects=False)
++
++
++def test_unsafe_destination_is_rejected_with_422(client):
++    response = client.post("/api/v1/links", json={"url": "http://169.254.169.254/latest"})
++    assert response.status_code == 422
++    assert response.json()["error"] == "UnsafeUrlError"
++
++
++def test_blocked_domain_from_settings():
++    client = make_client(blocked_domains=("evil.test",))
++    assert client.post("/api/v1/links", json={"url": "https://a.evil.test/"}).status_code == 422
++    assert client.post("/api/v1/links", json={"url": "https://good.test/"}).status_code == 201
++
++
++def test_create_is_rate_limited_with_retry_after():
++    client = make_client(create_rate_limit_per_minute=2)
++    for _ in range(2):
++        assert client.post("/api/v1/links", json={"url": "https://example.com"}).status_code == 201
++    limited = client.post("/api/v1/links", json={"url": "https://example.com"})
++    assert limited.status_code == 429
++    assert limited.json()["error"] == "RateLimitedError"
++    assert int(limited.headers["Retry-After"]) >= 1
++
++
++def test_zero_disables_create_limit():
++    client = make_client(create_rate_limit_per_minute=0)
++    for _ in range(50):
++        assert client.post("/api/v1/links", json={"url": "https://example.com"}).status_code == 201
