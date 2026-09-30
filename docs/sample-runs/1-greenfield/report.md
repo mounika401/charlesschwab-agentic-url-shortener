@@ -1,10 +1,10 @@
 # Run report: greenfield (greenfield)
 
-- **Run id:** `20260929-182928-greenfield-57d5`
+- **Run id:** `20260930-091230-greenfield-ebd5`
 - **Status:** **succeeded**
 - **Provider chain:** scripted
 - **Faults injected:** none
-- **End-to-end latency:** 4.102 s
+- **End-to-end latency:** 5.042 s
 
 ## Requirement (as given)
 
@@ -126,66 +126,66 @@ Critical path of implementation tasks: `['G1', 'G3', 'G4', 'G5']`
 |   0.00 | `run.started` |  |  |
 |   0.00 | `node.started` | requirements |  |
 |   0.00 | `approval.requested` | requirements | - Should redirects be permanent (301/308) or temporary (302/307)? (default: 307) - Should DELETE hard-delete a link or tombstone it so the code is never reused… |
-|   0.00 | `approval.decided` | requirements | answer by avinash.kanna (recorded): Temporary redirects so we can change destinations and keep counting clicks. |
+|   0.00 | `approval.decided` | requirements | answer by mounika.veeranki (recorded): Temporary redirects so we can change destinations and keep counting clicks. |
 |   0.01 | `node.succeeded` | requirements | spec with 6 acceptance criteria; 2 clarifications |
 |   0.01 | `node.started` | design |  |
 |   0.01 | `node.started` | threat_model |  |
 |   0.02 | `approval.requested` | design | 6 endpoints, 3 ADRs  files: ['docs/adr/ADR-001.md', 'docs/adr/ADR-002.md', 'docs/adr/ADR-003.md', 'docs/design/greenfield.md'] new files: ['docs/adr/ADR-001.md… |
-|   0.02 | `approval.decided` | design | approve by avinash.kanna (recorded): Layering and SQLite choice are fine for v1; keep the repository interface swappable. |
+|   0.02 | `approval.decided` | design | approve by mounika.veeranki (recorded): Layering and SQLite choice are fine for v1; keep the repository interface swappable. |
 |   0.15 | `node.succeeded` | threat_model | 7 threats identified, 4 residual |
-|   0.24 | `node.succeeded` | design | 6 endpoints, 3 ADRs |
-|   0.24 | `node.started` | plan |  |
-|   0.25 | `node.succeeded` | plan | 6 tasks, 4 waves |
-|   0.25 | `graph.mutated` | plan | added=['impl:G1', 'impl:G6', 'impl:G2', 'impl:G3', 'impl:G4', 'impl:G5'] updated=[] removed=[] |
-|   0.25 | `node.started` | impl:G1 |  |
-|   0.25 | `node.started` | impl:G6 |  |
-|   0.27 | `approval.requested` | impl:G6 | G6: 1 files  files: ['requirements.txt'] new files: ['requirements.txt'] detected actions: ['new_dependency'] |
-|   0.27 | `approval.decided` | impl:G6 | approve by avinash.kanna (recorded): Dependencies are on the allowlist. |
-|   0.36 | `node.succeeded` | impl:G6 | G6: 1 files |
-|   0.64 | `node.succeeded` | impl:G1 | G1: 6 files |
-|   0.64 | `node.started` | impl:G2 |  |
-|   0.64 | `node.started` | impl:G3 |  |
-|   0.93 | `approval.requested` | impl:G3 | G3: 4 files  files: ['shortener/db.py', 'shortener/repository.py', 'tests/shortener/conftest.py', 'tests/shortener/test_persistence.py'] new files: ['shortener… |
-|   0.93 | `approval.decided` | impl:G3 | approve by avinash.kanna (recorded): Initial schema reviewed: links table, created_at index, no PII. |
-|   1.02 | `node.succeeded` | impl:G3 | G3: 4 files |
-|   1.14 | `node.succeeded` | impl:G2 | G2: 3 files |
-|   1.14 | `node.started` | impl:G4 |  |
-|   1.50 | `node.succeeded` | impl:G4 | G4: 2 files |
-|   1.51 | `node.started` | impl:G5 |  |
-|   2.42 | `approval.requested` | impl:G5 | G5: 3 files  files: ['shortener/app.py', 'shortener/schemas.py', 'tests/shortener/test_api.py'] new files: ['shortener/app.py', 'shortener/schemas.py', 'tests/… |
-|   2.42 | `approval.decided` | impl:G5 | approve by avinash.kanna (recorded): Public API surface matches the signed-off design; error mapping centralised. |
-|   2.50 | `node.succeeded` | impl:G5 | G5: 3 files |
-|   2.50 | `node.started` | docs |  |
-|   2.50 | `node.started` | security |  |
-|   2.50 | `node.started` | verify |  |
-|   2.54 | `node.succeeded` | security | findings {'high': 0, 'medium': 0, 'low': 0} |
-|   3.07 | `node.succeeded` | docs | API reference for 6 endpoints; changelog 1.0.0 |
-|   3.66 | `node.succeeded` | verify | 44 tests passed, 0 failed |
-|   3.67 | `node.started` | release_readiness |  |
-|   3.67 | `node.succeeded` | release_readiness | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
-|   3.68 | `node.started` | release_approval |  |
-|   3.68 | `approval.requested` | release_approval | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
-|   3.68 | `approval.decided` | release_approval | approve by avinash.kanna (recorded): Readiness checklist green. Ship v1.0.0. |
-|   3.68 | `node.succeeded` | release_approval | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
-|   3.68 | `node.started` | release |  |
-|   4.10 | `node.succeeded` | release | released 1.0.0 (8fcdc31d01) |
-|   4.10 | `run.finished` |  | status=succeeded |
+|   0.27 | `node.succeeded` | design | 6 endpoints, 3 ADRs |
+|   0.27 | `node.started` | plan |  |
+|   0.27 | `node.succeeded` | plan | 6 tasks, 4 waves |
+|   0.27 | `graph.mutated` | plan | added=['impl:G1', 'impl:G6', 'impl:G2', 'impl:G3', 'impl:G4', 'impl:G5'] updated=[] removed=[] |
+|   0.28 | `node.started` | impl:G1 |  |
+|   0.28 | `node.started` | impl:G6 |  |
+|   0.29 | `approval.requested` | impl:G6 | G6: 1 files  files: ['requirements.txt'] new files: ['requirements.txt'] detected actions: ['new_dependency'] |
+|   0.29 | `approval.decided` | impl:G6 | approve by mounika.veeranki (recorded): Dependencies are on the allowlist. |
+|   0.46 | `node.succeeded` | impl:G6 | G6: 1 files |
+|   1.01 | `node.succeeded` | impl:G1 | G1: 6 files |
+|   1.02 | `node.started` | impl:G2 |  |
+|   1.02 | `node.started` | impl:G3 |  |
+|   1.48 | `approval.requested` | impl:G3 | G3: 4 files  files: ['shortener/db.py', 'shortener/repository.py', 'tests/shortener/conftest.py', 'tests/shortener/test_persistence.py'] new files: ['shortener… |
+|   1.48 | `approval.decided` | impl:G3 | approve by mounika.veeranki (recorded): Initial schema reviewed: links table, created_at index, no PII. |
+|   1.51 | `node.succeeded` | impl:G2 | G2: 3 files |
+|   1.64 | `node.succeeded` | impl:G3 | G3: 4 files |
+|   1.64 | `node.started` | impl:G4 |  |
+|   2.07 | `node.succeeded` | impl:G4 | G4: 2 files |
+|   2.08 | `node.started` | impl:G5 |  |
+|   3.04 | `approval.requested` | impl:G5 | G5: 3 files  files: ['shortener/app.py', 'shortener/schemas.py', 'tests/shortener/test_api.py'] new files: ['shortener/app.py', 'shortener/schemas.py', 'tests/… |
+|   3.04 | `approval.decided` | impl:G5 | approve by mounika.veeranki (recorded): Public API surface matches the signed-off design; error mapping centralised. |
+|   3.14 | `node.succeeded` | impl:G5 | G5: 3 files |
+|   3.15 | `node.started` | docs |  |
+|   3.15 | `node.started` | security |  |
+|   3.15 | `node.started` | verify |  |
+|   3.18 | `node.succeeded` | security | findings {'high': 0, 'medium': 0, 'low': 0} |
+|   3.72 | `node.succeeded` | docs | API reference for 6 endpoints; changelog 1.0.0 |
+|   4.56 | `node.succeeded` | verify | 44 tests passed, 0 failed |
+|   4.56 | `node.started` | release_readiness |  |
+|   4.57 | `node.succeeded` | release_readiness | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
+|   4.57 | `node.started` | release_approval |  |
+|   4.57 | `approval.requested` | release_approval | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
+|   4.57 | `approval.decided` | release_approval | approve by mounika.veeranki (recorded): Readiness checklist green. Ship v1.0.0. |
+|   4.57 | `node.succeeded` | release_approval | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
+|   4.58 | `node.started` | release |  |
+|   5.04 | `node.succeeded` | release | released 1.0.0 (0d86d65ad5) |
+|   5.04 | `run.finished` |  | status=succeeded |
 
 ## Human checkpoints
 
 | Checkpoint | Node | # | Decision | Approver | Comment |
 |---|---|---|---|---|---|
-| clarification | requirements | 1 | **answer** | avinash.kanna (recorded) | Temporary redirects so we can change destinations and keep counting clicks. |
-| design_signoff | design | 1 | **approve** | avinash.kanna (recorded) | Layering and SQLite choice are fine for v1; keep the repository interface swappable. |
-| change_review | impl:G6 | 1 | **approve** | avinash.kanna (recorded) | Dependencies are on the allowlist. |
-| change_review | impl:G3 | 2 | **approve** | avinash.kanna (recorded) | Initial schema reviewed: links table, created_at index, no PII. |
-| change_review | impl:G5 | 3 | **approve** | avinash.kanna (recorded) | Public API surface matches the signed-off design; error mapping centralised. |
-| release | release_approval | 1 | **approve** | avinash.kanna (recorded) | Readiness checklist green. Ship v1.0.0. |
+| clarification | requirements | 1 | **answer** | mounika.veeranki (recorded) | Temporary redirects so we can change destinations and keep counting clicks. |
+| design_signoff | design | 1 | **approve** | mounika.veeranki (recorded) | Layering and SQLite choice are fine for v1; keep the repository interface swappable. |
+| change_review | impl:G6 | 1 | **approve** | mounika.veeranki (recorded) | Dependencies are on the allowlist. |
+| change_review | impl:G3 | 2 | **approve** | mounika.veeranki (recorded) | Initial schema reviewed: links table, created_at index, no PII. |
+| change_review | impl:G5 | 3 | **approve** | mounika.veeranki (recorded) | Public API surface matches the signed-off design; error mapping centralised. |
+| release | release_approval | 1 | **approve** | mounika.veeranki (recorded) | Readiness checklist green. Ship v1.0.0. |
 
 ## Decisions and lineage
 
-- **clarify:redirect-status** (human:avinash.kanna (recorded), requirements): Should redirects be permanent (301/308) or temporary (302/307)? -> 307
-- **clarify:delete-semantics** (human:avinash.kanna (recorded), requirements): Should DELETE hard-delete a link or tombstone it so the code is never reused? -> hard-delete
+- **clarify:redirect-status** (human:mounika.veeranki (recorded), requirements): Should redirects be permanent (301/308) or temporary (302/307)? -> 307
+- **clarify:delete-semantics** (human:mounika.veeranki (recorded), requirements): Should DELETE hard-delete a link or tombstone it so the code is never reused? -> hard-delete
 - **spec:normalised** (agent, requirements): normalised requirement into 6 functional reqs, 6 acceptance criteria, flags=[]
 - **threats:assessed** (agent, threat_model): 7 threats, 4 residual
 - **ADR-001** (agent, design): SQLite behind a repository interface: Use SQLite (WAL) with versioned forward-only migrations, accessed only through LinkRepository.
@@ -194,20 +194,20 @@ Critical path of implementation tasks: `['G1', 'G3', 'G4', 'G5']`
 - **plan:decomposition** (agent, plan): 6 tasks in 4 waves; critical path ['G1', 'G3', 'G4', 'G5']
 - **impl:G6** (agent, impl:G6): Declare runtime and test dependencies (1 files)
 - **impl:G1** (agent, impl:G1): Domain model, errors and configuration (6 files)
-- **impl:G3** (agent, impl:G3): Persistence layer and schema v1 (4 files)
 - **impl:G2** (agent, impl:G2): Code generation and URL validation (3 files)
+- **impl:G3** (agent, impl:G3): Persistence layer and schema v1 (4 files)
 - **impl:G4** (agent, impl:G4): Link service (business rules) (2 files)
 - **impl:G5** (agent, impl:G5): HTTP API (3 files)
 - **security:scan** (agent, security): findings {'high': 0, 'medium': 0, 'low': 0}
 - **verify:result** (agent, verify): 44 passed / 0 failed; contract missing=[]
 - **release:readiness** (agent, release_readiness): ready=True version=1.0.0
-- **release:promoted** (agent, release): promoted 8fcdc31d01 to release
+- **release:promoted** (agent, release): promoted 0d86d65ad5 to release
 
 Lineage of the release decision:
 
 ```text
 - decision release:readiness by agent @ release_readiness: ready=True version=1.0.0
-  - verification (from verify run 1, hash b1cb1b3db70334d3)
+  - verification (from verify run 1, hash 2ff6fb127358ced9)
     - design (from design run 1, hash 26d51b5b41b1be21)
       - spec (from requirements run 1, hash bdb7936c958a74c5)
         - requirement (from human:product-owner run 1, hash f18a223549f49431)
@@ -221,7 +221,7 @@ Lineage of the release decision:
 
 ## Validation
 
-- Tests: 44 passed, 0 failed (1.16 s)
+- Tests: 44 passed, 0 failed (1.41 s)
 - API contract: missing=[], undeclared=[]
 - Security findings: {'high': 0, 'medium': 0, 'low': 0}
 - Residual threats: ['T4', 'T5', 'T6', 'T7']
@@ -241,7 +241,7 @@ Lineage of the release decision:
 | Metric | Value |
 |---|---|
 | status | succeeded |
-| end_to_end_latency_s | 4.102 |
+| end_to_end_latency_s | 5.042 |
 | nodes_total | 16 |
 | nodes_succeeded | 16 |
 | nodes_failed | 0 |
@@ -259,22 +259,22 @@ Lineage of the release decision:
 | incidents_recovered | 0 |
 | incidents_unrecovered | 0 |
 | mttr_s | None |
-| stage_latency_s | {'design': 0.371, 'docs': 0.568, 'implement': 2.721, 'plan': 0.006, 'release': 0.418, 'requirements': 0.004, 'verify': 1.195} |
+| stage_latency_s | {'design': 0.4, 'docs': 0.575, 'implement': 3.515, 'plan': 0.006, 'release': 0.465, 'requirements': 0.004, 'verify': 1.44} |
 
 ## Workspace commits (checkpoints)
 
 ```text
-88369681d1 baseline: empty workspace
-37ed704e0d baseline: project scaffold (pytest config)
-d4abcebcc6 [threat_model] 7 threats identified, 4 residual
-7da67b8a61 [design] 6 endpoints, 3 ADRs
-929841ce42 [impl:G6] G6: 1 files
-6c395c2b59 [impl:G1] G1: 6 files
-b0b2cdabfe [impl:G3] G3: 4 files
-3a3c8a008e [impl:G2] G2: 3 files
-2363a2be23 [impl:G4] G4: 2 files
-87d9467aa4 [impl:G5] G5: 3 files
-8fcdc31d01 [docs] API reference for 6 endpoints; changelog 1.0.0
+530b8b525d baseline: empty workspace
+43bd29f75a baseline: project scaffold (pytest config)
+4757dc3ab4 [threat_model] 7 threats identified, 4 residual
+baf21875ae [design] 6 endpoints, 3 ADRs
+a2180b24aa [impl:G6] G6: 1 files
+3f6bb0d435 [impl:G1] G1: 6 files
+9802594456 [impl:G2] G2: 3 files
+bc7d0be90e [impl:G3] G3: 4 files
+5e004e7d81 [impl:G4] G4: 2 files
+b0a28ddf95 [impl:G5] G5: 3 files
+0d86d65ad5 [docs] API reference for 6 endpoints; changelog 1.0.0
 ```
 
 Audit trail: `audit.jsonl` (hash-chained). Artifacts: `artifacts/`. Released tree: `release/`.

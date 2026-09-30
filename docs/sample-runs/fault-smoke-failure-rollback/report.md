@@ -1,10 +1,10 @@
 # Run report: greenfield (greenfield)
 
-- **Run id:** `20260929-182951-greenfield-e9db`
+- **Run id:** `20260930-091258-greenfield-8ddf`
 - **Status:** **failed**
 - **Provider chain:** scripted
 - **Faults injected:** ['smoke_failure']
-- **End-to-end latency:** 4.041 s
+- **End-to-end latency:** 4.656 s
 
 ## Requirement (as given)
 
@@ -125,71 +125,71 @@ Critical path of implementation tasks: `['G1', 'G3', 'G4', 'G5']`
 |---|---|---|---|
 |   0.00 | `run.started` |  |  |
 |   0.00 | `node.started` | requirements |  |
-|   0.01 | `approval.requested` | requirements | - Should redirects be permanent (301/308) or temporary (302/307)? (default: 307) - Should DELETE hard-delete a link or tombstone it so the code is never reused… |
-|   0.01 | `approval.decided` | requirements | answer by avinash.kanna (recorded): Temporary redirects so we can change destinations and keep counting clicks. |
-|   0.01 | `node.succeeded` | requirements | spec with 6 acceptance criteria; 2 clarifications |
+|   0.00 | `approval.requested` | requirements | - Should redirects be permanent (301/308) or temporary (302/307)? (default: 307) - Should DELETE hard-delete a link or tombstone it so the code is never reused… |
+|   0.00 | `approval.decided` | requirements | answer by mounika.veeranki (recorded): Temporary redirects so we can change destinations and keep counting clicks. |
+|   0.00 | `node.succeeded` | requirements | spec with 6 acceptance criteria; 2 clarifications |
 |   0.01 | `node.started` | design |  |
 |   0.01 | `node.started` | threat_model |  |
-|   0.03 | `approval.requested` | design | 6 endpoints, 3 ADRs  files: ['docs/adr/ADR-001.md', 'docs/adr/ADR-002.md', 'docs/adr/ADR-003.md', 'docs/design/greenfield.md'] new files: ['docs/adr/ADR-001.md… |
-|   0.03 | `approval.decided` | design | approve by avinash.kanna (recorded): Layering and SQLite choice are fine for v1; keep the repository interface swappable. |
+|   0.02 | `approval.requested` | design | 6 endpoints, 3 ADRs  files: ['docs/adr/ADR-001.md', 'docs/adr/ADR-002.md', 'docs/adr/ADR-003.md', 'docs/design/greenfield.md'] new files: ['docs/adr/ADR-001.md… |
+|   0.02 | `approval.decided` | design | approve by mounika.veeranki (recorded): Layering and SQLite choice are fine for v1; keep the repository interface swappable. |
 |   0.14 | `node.succeeded` | threat_model | 7 threats identified, 4 residual |
-|   0.23 | `node.succeeded` | design | 6 endpoints, 3 ADRs |
-|   0.23 | `node.started` | plan |  |
-|   0.24 | `node.succeeded` | plan | 6 tasks, 4 waves |
-|   0.24 | `graph.mutated` | plan | added=['impl:G1', 'impl:G6', 'impl:G2', 'impl:G3', 'impl:G4', 'impl:G5'] updated=[] removed=[] |
-|   0.24 | `node.started` | impl:G1 |  |
-|   0.24 | `node.started` | impl:G6 |  |
-|   0.26 | `approval.requested` | impl:G6 | G6: 1 files  files: ['requirements.txt'] new files: ['requirements.txt'] detected actions: ['new_dependency'] |
-|   0.26 | `approval.decided` | impl:G6 | approve by avinash.kanna (recorded): Dependencies are on the allowlist. |
-|   0.35 | `node.succeeded` | impl:G6 | G6: 1 files |
-|   0.61 | `node.succeeded` | impl:G1 | G1: 6 files |
-|   0.62 | `node.started` | impl:G2 |  |
-|   0.62 | `node.started` | impl:G3 |  |
-|   0.92 | `approval.requested` | impl:G3 | G3: 4 files  files: ['shortener/db.py', 'shortener/repository.py', 'tests/shortener/conftest.py', 'tests/shortener/test_persistence.py'] new files: ['shortener… |
-|   0.92 | `approval.decided` | impl:G3 | approve by avinash.kanna (recorded): Initial schema reviewed: links table, created_at index, no PII. |
-|   1.01 | `node.succeeded` | impl:G3 | G3: 4 files |
-|   1.10 | `node.succeeded` | impl:G2 | G2: 3 files |
-|   1.10 | `node.started` | impl:G4 |  |
-|   1.44 | `node.succeeded` | impl:G4 | G4: 2 files |
-|   1.44 | `node.started` | impl:G5 |  |
-|   2.21 | `approval.requested` | impl:G5 | G5: 3 files  files: ['shortener/app.py', 'shortener/schemas.py', 'tests/shortener/test_api.py'] new files: ['shortener/app.py', 'shortener/schemas.py', 'tests/… |
-|   2.21 | `approval.decided` | impl:G5 | approve by avinash.kanna (recorded): Public API surface matches the signed-off design; error mapping centralised. |
-|   2.33 | `node.succeeded` | impl:G5 | G5: 3 files |
-|   2.34 | `node.started` | docs |  |
-|   2.34 | `node.started` | security |  |
-|   2.34 | `node.started` | verify |  |
-|   2.36 | `node.succeeded` | security | findings {'high': 0, 'medium': 0, 'low': 0} |
-|   2.92 | `node.succeeded` | docs | API reference for 6 endpoints; changelog 1.0.0 |
-|   3.54 | `node.succeeded` | verify | 44 tests passed, 0 failed |
-|   3.55 | `node.started` | release_readiness |  |
-|   3.55 | `node.succeeded` | release_readiness | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
-|   3.56 | `node.started` | release_approval |  |
-|   3.56 | `approval.requested` | release_approval | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
-|   3.56 | `approval.decided` | release_approval | approve by avinash.kanna (recorded): Readiness checklist green. Ship v1.0.0. |
-|   3.56 | `node.succeeded` | release_approval | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
-|   3.57 | `node.started` | release |  |
-|   4.03 | `rollback.performed` | release | promotion reverted after failed smoke test |
-|   4.03 | `attempt.failed` | release | AgentError: smoke test failed, promotion rolled back: injected smoke failure |
-|   4.03 | `node.failed` | release | NodeFailed: release failed after retries: AgentError: smoke test failed, promotion rolled back: injected smoke failure |
-|   4.03 | `halt.requested` |  | release failed: release failed after retries: AgentError: smoke test failed, promotion rolled back: injected smoke failure |
-|   4.04 | `run.halted` |  | release failed: release failed after retries: AgentError: smoke test failed, promotion rolled back: injected smoke failure |
-|   4.04 | `run.finished` |  | status=failed |
+|   0.26 | `node.succeeded` | design | 6 endpoints, 3 ADRs |
+|   0.27 | `node.started` | plan |  |
+|   0.27 | `node.succeeded` | plan | 6 tasks, 4 waves |
+|   0.27 | `graph.mutated` | plan | added=['impl:G1', 'impl:G6', 'impl:G2', 'impl:G3', 'impl:G4', 'impl:G5'] updated=[] removed=[] |
+|   0.28 | `node.started` | impl:G1 |  |
+|   0.28 | `node.started` | impl:G6 |  |
+|   0.30 | `approval.requested` | impl:G6 | G6: 1 files  files: ['requirements.txt'] new files: ['requirements.txt'] detected actions: ['new_dependency'] |
+|   0.30 | `approval.decided` | impl:G6 | approve by mounika.veeranki (recorded): Dependencies are on the allowlist. |
+|   0.44 | `node.succeeded` | impl:G6 | G6: 1 files |
+|   0.69 | `node.succeeded` | impl:G1 | G1: 6 files |
+|   0.69 | `node.started` | impl:G2 |  |
+|   0.69 | `node.started` | impl:G3 |  |
+|   1.03 | `approval.requested` | impl:G3 | G3: 4 files  files: ['shortener/db.py', 'shortener/repository.py', 'tests/shortener/conftest.py', 'tests/shortener/test_persistence.py'] new files: ['shortener… |
+|   1.03 | `approval.decided` | impl:G3 | approve by mounika.veeranki (recorded): Initial schema reviewed: links table, created_at index, no PII. |
+|   1.17 | `node.succeeded` | impl:G3 | G3: 4 files |
+|   1.30 | `node.succeeded` | impl:G2 | G2: 3 files |
+|   1.30 | `node.started` | impl:G4 |  |
+|   1.74 | `node.succeeded` | impl:G4 | G4: 2 files |
+|   1.75 | `node.started` | impl:G5 |  |
+|   2.58 | `approval.requested` | impl:G5 | G5: 3 files  files: ['shortener/app.py', 'shortener/schemas.py', 'tests/shortener/test_api.py'] new files: ['shortener/app.py', 'shortener/schemas.py', 'tests/… |
+|   2.58 | `approval.decided` | impl:G5 | approve by mounika.veeranki (recorded): Public API surface matches the signed-off design; error mapping centralised. |
+|   2.73 | `node.succeeded` | impl:G5 | G5: 3 files |
+|   2.73 | `node.started` | docs |  |
+|   2.73 | `node.started` | security |  |
+|   2.73 | `node.started` | verify |  |
+|   2.78 | `node.succeeded` | security | findings {'high': 0, 'medium': 0, 'low': 0} |
+|   3.33 | `node.succeeded` | docs | API reference for 6 endpoints; changelog 1.0.0 |
+|   4.10 | `node.succeeded` | verify | 44 tests passed, 0 failed |
+|   4.10 | `node.started` | release_readiness |  |
+|   4.11 | `node.succeeded` | release_readiness | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
+|   4.11 | `node.started` | release_approval |  |
+|   4.12 | `approval.requested` | release_approval | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
+|   4.12 | `approval.decided` | release_approval | approve by mounika.veeranki (recorded): Readiness checklist green. Ship v1.0.0. |
+|   4.12 | `node.succeeded` | release_approval | [PASS] all_tasks_implemented: 6 tasks [PASS] tests_green: 44 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
+|   4.12 | `node.started` | release |  |
+|   4.64 | `rollback.performed` | release | promotion reverted after failed smoke test |
+|   4.64 | `attempt.failed` | release | AgentError: smoke test failed, promotion rolled back: injected smoke failure |
+|   4.64 | `node.failed` | release | NodeFailed: release failed after retries: AgentError: smoke test failed, promotion rolled back: injected smoke failure |
+|   4.64 | `halt.requested` |  | release failed: release failed after retries: AgentError: smoke test failed, promotion rolled back: injected smoke failure |
+|   4.66 | `run.halted` |  | release failed: release failed after retries: AgentError: smoke test failed, promotion rolled back: injected smoke failure |
+|   4.66 | `run.finished` |  | status=failed |
 
 ## Human checkpoints
 
 | Checkpoint | Node | # | Decision | Approver | Comment |
 |---|---|---|---|---|---|
-| clarification | requirements | 1 | **answer** | avinash.kanna (recorded) | Temporary redirects so we can change destinations and keep counting clicks. |
-| design_signoff | design | 1 | **approve** | avinash.kanna (recorded) | Layering and SQLite choice are fine for v1; keep the repository interface swappable. |
-| change_review | impl:G6 | 1 | **approve** | avinash.kanna (recorded) | Dependencies are on the allowlist. |
-| change_review | impl:G3 | 2 | **approve** | avinash.kanna (recorded) | Initial schema reviewed: links table, created_at index, no PII. |
-| change_review | impl:G5 | 3 | **approve** | avinash.kanna (recorded) | Public API surface matches the signed-off design; error mapping centralised. |
-| release | release_approval | 1 | **approve** | avinash.kanna (recorded) | Readiness checklist green. Ship v1.0.0. |
+| clarification | requirements | 1 | **answer** | mounika.veeranki (recorded) | Temporary redirects so we can change destinations and keep counting clicks. |
+| design_signoff | design | 1 | **approve** | mounika.veeranki (recorded) | Layering and SQLite choice are fine for v1; keep the repository interface swappable. |
+| change_review | impl:G6 | 1 | **approve** | mounika.veeranki (recorded) | Dependencies are on the allowlist. |
+| change_review | impl:G3 | 2 | **approve** | mounika.veeranki (recorded) | Initial schema reviewed: links table, created_at index, no PII. |
+| change_review | impl:G5 | 3 | **approve** | mounika.veeranki (recorded) | Public API surface matches the signed-off design; error mapping centralised. |
+| release | release_approval | 1 | **approve** | mounika.veeranki (recorded) | Readiness checklist green. Ship v1.0.0. |
 
 ## Decisions and lineage
 
-- **clarify:redirect-status** (human:avinash.kanna (recorded), requirements): Should redirects be permanent (301/308) or temporary (302/307)? -> 307
-- **clarify:delete-semantics** (human:avinash.kanna (recorded), requirements): Should DELETE hard-delete a link or tombstone it so the code is never reused? -> hard-delete
+- **clarify:redirect-status** (human:mounika.veeranki (recorded), requirements): Should redirects be permanent (301/308) or temporary (302/307)? -> 307
+- **clarify:delete-semantics** (human:mounika.veeranki (recorded), requirements): Should DELETE hard-delete a link or tombstone it so the code is never reused? -> hard-delete
 - **spec:normalised** (agent, requirements): normalised requirement into 6 functional reqs, 6 acceptance criteria, flags=[]
 - **threats:assessed** (agent, threat_model): 7 threats, 4 residual
 - **ADR-001** (agent, design): SQLite behind a repository interface: Use SQLite (WAL) with versioned forward-only migrations, accessed only through LinkRepository.
@@ -210,7 +210,7 @@ Lineage of the release decision:
 
 ```text
 - decision release:readiness by agent @ release_readiness: ready=True version=1.0.0
-  - verification (from verify run 1, hash 05c41778bd97a184)
+  - verification (from verify run 1, hash eeb9a7978c5f35b4)
     - design (from design run 1, hash 26d51b5b41b1be21)
       - spec (from requirements run 1, hash bdb7936c958a74c5)
         - requirement (from human:product-owner run 1, hash f18a223549f49431)
@@ -224,7 +224,7 @@ Lineage of the release decision:
 
 ## Validation
 
-- Tests: 44 passed, 0 failed (1.2 s)
+- Tests: 44 passed, 0 failed (1.36 s)
 - API contract: missing=[], undeclared=[]
 - Security findings: {'high': 0, 'medium': 0, 'low': 0}
 - Residual threats: ['T4', 'T5', 'T6', 'T7']
@@ -244,7 +244,7 @@ Lineage of the release decision:
 | Metric | Value |
 |---|---|
 | status | failed |
-| end_to_end_latency_s | 4.041 |
+| end_to_end_latency_s | 4.656 |
 | nodes_total | 16 |
 | nodes_succeeded | 15 |
 | nodes_failed | 1 |
@@ -262,22 +262,22 @@ Lineage of the release decision:
 | incidents_recovered | 0 |
 | incidents_unrecovered | 1 |
 | mttr_s | None |
-| stage_latency_s | {'design': 0.348, 'docs': 0.577, 'implement': 2.573, 'plan': 0.006, 'release': 0.467, 'requirements': 0.005, 'verify': 1.221} |
+| stage_latency_s | {'design': 0.383, 'docs': 0.597, 'implement': 3.075, 'plan': 0.006, 'release': 0.526, 'requirements': 0.003, 'verify': 1.412} |
 
 ## Workspace commits (checkpoints)
 
 ```text
-8c45cf800c baseline: empty workspace
-d4c3cbdeb2 baseline: project scaffold (pytest config)
-61c8d0926e [threat_model] 7 threats identified, 4 residual
-d54fc44e86 [design] 6 endpoints, 3 ADRs
-51d6af5022 [impl:G6] G6: 1 files
-00e12c5988 [impl:G1] G1: 6 files
-23a203585f [impl:G3] G3: 4 files
-5c4cf7f40b [impl:G2] G2: 3 files
-76f7a02d5c [impl:G4] G4: 2 files
-c23049f279 [impl:G5] G5: 3 files
-31fe5d93d3 [docs] API reference for 6 endpoints; changelog 1.0.0
+cb613dae1d baseline: empty workspace
+9008986fbe baseline: project scaffold (pytest config)
+cd9340cb9c [threat_model] 7 threats identified, 4 residual
+b9872fdbd4 [design] 6 endpoints, 3 ADRs
+70612c7328 [impl:G6] G6: 1 files
+4da48ff33f [impl:G1] G1: 6 files
+3872d02694 [impl:G3] G3: 4 files
+de06d1c8a9 [impl:G2] G2: 3 files
+087cf3e84e [impl:G4] G4: 2 files
+4901459f6f [impl:G5] G5: 3 files
+007dc96bc5 [docs] API reference for 6 endpoints; changelog 1.0.0
 ```
 
 Audit trail: `audit.jsonl` (hash-chained). Artifacts: `artifacts/`. Released tree: `release/`.

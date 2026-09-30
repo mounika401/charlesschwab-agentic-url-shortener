@@ -1,10 +1,10 @@
 # Run report: brownfield (brownfield)
 
-- **Run id:** `20260929-182932-brownfield-5890`
+- **Run id:** `20260930-091235-brownfield-96af`
 - **Status:** **succeeded**
 - **Provider chain:** scripted
 - **Faults injected:** none
-- **End-to-end latency:** 5.408 s
+- **End-to-end latency:** 6.091 s
 
 ## Requirement (as given)
 
@@ -116,73 +116,73 @@ Critical path of implementation tasks: `['B1', 'B3', 'B4', 'B5']`
 |---|---|---|---|
 |   0.00 | `run.started` |  |  |
 |   0.00 | `node.started` | requirements |  |
-|   0.00 | `approval.requested` | requirements | - Unique visitors need a stable identity but raw IPs are forbidden. Use a salted hash of IP+user-agent, or drop unique visitors? (default: salted-hash) - How l… |
-|   0.01 | `approval.decided` | requirements | answer by avinash.kanna (recorded): Hash with a secret salt; retention policy is a follow-up with legal. |
+|   0.01 | `approval.requested` | requirements | - Unique visitors need a stable identity but raw IPs are forbidden. Use a salted hash of IP+user-agent, or drop unique visitors? (default: salted-hash) - How l… |
+|   0.01 | `approval.decided` | requirements | answer by mounika.veeranki (recorded): Hash with a secret salt; retention policy is a follow-up with legal. |
 |   0.01 | `node.succeeded` | requirements | spec with 5 acceptance criteria; 2 clarifications |
 |   0.01 | `node.started` | codebase |  |
 |   0.01 | `node.started` | threat_model |  |
 |   0.03 | `node.succeeded` | codebase | 12 modules, 6 routes, 4 impacted |
 |   0.03 | `node.started` | design |  |
-|   0.12 | `node.succeeded` | threat_model | 4 threats identified, 1 residual |
-|   0.12 | `approval.requested` | design | 7 endpoints, 3 ADRs  files: ['docs/adr/ADR-004.md', 'docs/adr/ADR-005.md', 'docs/adr/ADR-006.md', 'docs/design/brownfield.md'] new files: ['docs/adr/ADR-004.md… |
-|   0.12 | `approval.decided` | design | approve by avinash.kanna (recorded): Append-only events + read-time aggregation is right at this scale. ON DELETE CASCADE ok. |
-|   0.23 | `node.succeeded` | design | 7 endpoints, 3 ADRs |
-|   0.23 | `node.started` | plan |  |
-|   0.24 | `node.succeeded` | plan | 5 tasks, 4 waves |
-|   0.24 | `graph.mutated` | plan | added=['impl:B1', 'impl:B2', 'impl:B3', 'impl:B4', 'impl:B5'] updated=[] removed=[] |
-|   0.25 | `node.started` | impl:B1 |  |
-|   0.59 | `approval.requested` | impl:B1 | B1: 1 files  files: ['shortener/db.py']  shortener/db.py \| 17 +++++++++++++++++  1 file changed, 17 insertions(+)  detected actions: ['schema_migration'] |
-|   0.59 | `approval.decided` | impl:B1 | approve by avinash.kanna (recorded): Migration 2 is additive (new table + index), no PII columns, runs in a transaction. |
-|   0.68 | `node.succeeded` | impl:B1 | B1: 1 files |
-|   0.68 | `node.started` | impl:B2 |  |
-|   0.68 | `node.started` | impl:B3 |  |
-|   0.80 | `node.succeeded` | impl:B2 | B2: 1 files |
-|   1.00 | `approval.requested` | impl:B3 | B3: 3 files  files: ['shortener/config.py', 'shortener/analytics.py', 'tests/shortener/test_analytics.py']  shortener/config.py \| 9 ++++++++-  1 file changed,… |
-|   1.00 | `approval.decided` | impl:B3 | approve by avinash.kanna (recorded): Only hashed visitor ids and referrer hosts persisted. Salt not hardcoded. |
-|   1.07 | `node.succeeded` | impl:B3 | B3: 3 files |
-|   1.08 | `node.started` | impl:B4 |  |
-|   1.78 | `attempt.failed` | impl:B4 | GateFailure: gate 'targeted_tests_pass' failed: targeted tests failed: F.....                                                                   [100%] ========… |
-|   1.79 | `rollback.performed` | impl:B4 | attempt 1 failed |
-|   1.79 | `retry.scheduled` | impl:B4 |  |
-|   2.50 | `approval.requested` | impl:B4 | B4: 1 files  files: ['shortener/link_service.py']  shortener/link_service.py \| 27 +++++++++++++++++++++++----  1 file changed, 23 insertions(+), 4 deletions(-… |
-|   2.50 | `approval.decided` | impl:B4 | approve by avinash.kanna (recorded): Expiry checked before any side effect; regression test now green. |
-|   2.59 | `node.succeeded` | impl:B4 | B4: 1 files |
-|   2.60 | `node.started` | impl:B5 |  |
-|   3.52 | `approval.requested` | impl:B5 | B5: 4 files  files: ['shortener/__init__.py', 'shortener/app.py', 'shortener/schemas.py', 'tests/shortener/test_stats_api.py']  shortener/__init__.py \|  2 +- … |
-|   3.52 | `approval.decided` | impl:B5 | approve by avinash.kanna (recorded): New endpoint is additive; existing responses unchanged. |
-|   3.62 | `node.succeeded` | impl:B5 | B5: 4 files |
-|   3.63 | `node.started` | docs |  |
-|   3.63 | `node.started` | security |  |
-|   3.63 | `node.started` | verify |  |
-|   3.67 | `node.succeeded` | security | findings {'high': 0, 'medium': 0, 'low': 0} |
-|   4.14 | `node.succeeded` | docs | API reference for 7 endpoints; changelog 1.1.0 |
-|   4.91 | `node.succeeded` | verify | 53 tests passed, 0 failed |
-|   4.92 | `node.started` | release_readiness |  |
-|   4.93 | `node.succeeded` | release_readiness | [PASS] all_tasks_implemented: 5 tasks [PASS] tests_green: 53 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
-|   4.93 | `node.started` | release_approval |  |
-|   4.93 | `approval.requested` | release_approval | [PASS] all_tasks_implemented: 5 tasks [PASS] tests_green: 53 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
-|   4.93 | `approval.decided` | release_approval | approve by avinash.kanna (recorded): BUG-101 regression test is green; existing contract unchanged. Ship 1.1.0. |
-|   4.93 | `node.succeeded` | release_approval | [PASS] all_tasks_implemented: 5 tasks [PASS] tests_green: 53 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
-|   4.94 | `node.started` | release |  |
-|   5.40 | `node.succeeded` | release | released 1.1.0 (5e9e8616f2) |
-|   5.41 | `run.finished` |  | status=succeeded |
+|   0.15 | `node.succeeded` | threat_model | 4 threats identified, 1 residual |
+|   0.15 | `approval.requested` | design | 7 endpoints, 3 ADRs  files: ['docs/adr/ADR-004.md', 'docs/adr/ADR-005.md', 'docs/adr/ADR-006.md', 'docs/design/brownfield.md'] new files: ['docs/adr/ADR-004.md… |
+|   0.15 | `approval.decided` | design | approve by mounika.veeranki (recorded): Append-only events + read-time aggregation is right at this scale. ON DELETE CASCADE ok. |
+|   0.28 | `node.succeeded` | design | 7 endpoints, 3 ADRs |
+|   0.28 | `node.started` | plan |  |
+|   0.28 | `node.succeeded` | plan | 5 tasks, 4 waves |
+|   0.28 | `graph.mutated` | plan | added=['impl:B1', 'impl:B2', 'impl:B3', 'impl:B4', 'impl:B5'] updated=[] removed=[] |
+|   0.29 | `node.started` | impl:B1 |  |
+|   0.63 | `approval.requested` | impl:B1 | B1: 1 files  files: ['shortener/db.py']  shortener/db.py \| 17 +++++++++++++++++  1 file changed, 17 insertions(+)  detected actions: ['schema_migration'] |
+|   0.63 | `approval.decided` | impl:B1 | approve by mounika.veeranki (recorded): Migration 2 is additive (new table + index), no PII columns, runs in a transaction. |
+|   0.74 | `node.succeeded` | impl:B1 | B1: 1 files |
+|   0.75 | `node.started` | impl:B2 |  |
+|   0.75 | `node.started` | impl:B3 |  |
+|   0.90 | `node.succeeded` | impl:B2 | B2: 1 files |
+|   1.09 | `approval.requested` | impl:B3 | B3: 3 files  files: ['shortener/config.py', 'shortener/analytics.py', 'tests/shortener/test_analytics.py']  shortener/config.py \| 9 ++++++++-  1 file changed,… |
+|   1.09 | `approval.decided` | impl:B3 | approve by mounika.veeranki (recorded): Only hashed visitor ids and referrer hosts persisted. Salt not hardcoded. |
+|   1.21 | `node.succeeded` | impl:B3 | B3: 3 files |
+|   1.22 | `node.started` | impl:B4 |  |
+|   2.09 | `attempt.failed` | impl:B4 | GateFailure: gate 'targeted_tests_pass' failed: targeted tests failed: F.....                                                                   [100%] ========… |
+|   2.10 | `rollback.performed` | impl:B4 | attempt 1 failed |
+|   2.10 | `retry.scheduled` | impl:B4 |  |
+|   2.86 | `approval.requested` | impl:B4 | B4: 1 files  files: ['shortener/link_service.py']  shortener/link_service.py \| 27 +++++++++++++++++++++++----  1 file changed, 23 insertions(+), 4 deletions(-… |
+|   2.86 | `approval.decided` | impl:B4 | approve by mounika.veeranki (recorded): Expiry checked before any side effect; regression test now green. |
+|   3.01 | `node.succeeded` | impl:B4 | B4: 1 files |
+|   3.01 | `node.started` | impl:B5 |  |
+|   3.89 | `approval.requested` | impl:B5 | B5: 4 files  files: ['shortener/__init__.py', 'shortener/app.py', 'shortener/schemas.py', 'tests/shortener/test_stats_api.py']  shortener/__init__.py \|  2 +- … |
+|   3.89 | `approval.decided` | impl:B5 | approve by mounika.veeranki (recorded): New endpoint is additive; existing responses unchanged. |
+|   4.03 | `node.succeeded` | impl:B5 | B5: 4 files |
+|   4.04 | `node.started` | docs |  |
+|   4.04 | `node.started` | security |  |
+|   4.04 | `node.started` | verify |  |
+|   4.09 | `node.succeeded` | security | findings {'high': 0, 'medium': 0, 'low': 0} |
+|   4.64 | `node.succeeded` | docs | API reference for 7 endpoints; changelog 1.1.0 |
+|   5.54 | `node.succeeded` | verify | 53 tests passed, 0 failed |
+|   5.55 | `node.started` | release_readiness |  |
+|   5.55 | `node.succeeded` | release_readiness | [PASS] all_tasks_implemented: 5 tasks [PASS] tests_green: 53 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
+|   5.56 | `node.started` | release_approval |  |
+|   5.56 | `approval.requested` | release_approval | [PASS] all_tasks_implemented: 5 tasks [PASS] tests_green: 53 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
+|   5.56 | `approval.decided` | release_approval | approve by mounika.veeranki (recorded): BUG-101 regression test is green; existing contract unchanged. Ship 1.1.0. |
+|   5.56 | `node.succeeded` | release_approval | [PASS] all_tasks_implemented: 5 tasks [PASS] tests_green: 53 passed, 0 failed [PASS] api_contract: missing=[] [PASS] no_high_security_findings: {'high': 0, 'me… |
+|   5.57 | `node.started` | release |  |
+|   6.08 | `node.succeeded` | release | released 1.1.0 (2a00bf3bd5) |
+|   6.09 | `run.finished` |  | status=succeeded |
 
 ## Human checkpoints
 
 | Checkpoint | Node | # | Decision | Approver | Comment |
 |---|---|---|---|---|---|
-| clarification | requirements | 1 | **answer** | avinash.kanna (recorded) | Hash with a secret salt; retention policy is a follow-up with legal. |
-| design_signoff | design | 1 | **approve** | avinash.kanna (recorded) | Append-only events + read-time aggregation is right at this scale. ON DELETE CASCADE ok. |
-| change_review | impl:B1 | 1 | **approve** | avinash.kanna (recorded) | Migration 2 is additive (new table + index), no PII columns, runs in a transaction. |
-| change_review | impl:B3 | 2 | **approve** | avinash.kanna (recorded) | Only hashed visitor ids and referrer hosts persisted. Salt not hardcoded. |
-| change_review | impl:B4 | 3 | **approve** | avinash.kanna (recorded) | Expiry checked before any side effect; regression test now green. |
-| change_review | impl:B5 | 4 | **approve** | avinash.kanna (recorded) | New endpoint is additive; existing responses unchanged. |
-| release | release_approval | 1 | **approve** | avinash.kanna (recorded) | BUG-101 regression test is green; existing contract unchanged. Ship 1.1.0. |
+| clarification | requirements | 1 | **answer** | mounika.veeranki (recorded) | Hash with a secret salt; retention policy is a follow-up with legal. |
+| design_signoff | design | 1 | **approve** | mounika.veeranki (recorded) | Append-only events + read-time aggregation is right at this scale. ON DELETE CASCADE ok. |
+| change_review | impl:B1 | 1 | **approve** | mounika.veeranki (recorded) | Migration 2 is additive (new table + index), no PII columns, runs in a transaction. |
+| change_review | impl:B3 | 2 | **approve** | mounika.veeranki (recorded) | Only hashed visitor ids and referrer hosts persisted. Salt not hardcoded. |
+| change_review | impl:B4 | 3 | **approve** | mounika.veeranki (recorded) | Expiry checked before any side effect; regression test now green. |
+| change_review | impl:B5 | 4 | **approve** | mounika.veeranki (recorded) | New endpoint is additive; existing responses unchanged. |
+| release | release_approval | 1 | **approve** | mounika.veeranki (recorded) | BUG-101 regression test is green; existing contract unchanged. Ship 1.1.0. |
 
 ## Decisions and lineage
 
-- **clarify:visitor-identity** (human:avinash.kanna (recorded), requirements): Unique visitors need a stable identity but raw IPs are forbidden. Use a salted hash of IP+user-agent, or drop unique visitors? -> salted-hash
-- **clarify:retention** (human:avinash.kanna (recorded), requirements): How long must click events be retained? -> unbounded-documented
+- **clarify:visitor-identity** (human:mounika.veeranki (recorded), requirements): Unique visitors need a stable identity but raw IPs are forbidden. Use a salted hash of IP+user-agent, or drop unique visitors? -> salted-hash
+- **clarify:retention** (human:mounika.veeranki (recorded), requirements): How long must click events be retained? -> unbounded-documented
 - **spec:normalised** (agent, requirements): normalised requirement into 4 functional reqs, 5 acceptance criteria, flags=[]
 - **codebase:impact** (agent, codebase): impacted ['shortener.app', 'shortener.db', 'shortener.errors', 'shortener.link_service']; blast radius ['shortener.__main__', 'shortener.repository', 'shortener.validation']
 - **threats:assessed** (agent, threat_model): 4 threats, 1 residual
@@ -198,13 +198,13 @@ Critical path of implementation tasks: `['B1', 'B3', 'B4', 'B5']`
 - **security:scan** (agent, security): findings {'high': 0, 'medium': 0, 'low': 0}
 - **verify:result** (agent, verify): 53 passed / 0 failed; contract missing=[]
 - **release:readiness** (agent, release_readiness): ready=True version=1.1.0
-- **release:promoted** (agent, release): promoted 5e9e8616f2 to release
+- **release:promoted** (agent, release): promoted 2a00bf3bd5 to release
 
 Lineage of the release decision:
 
 ```text
 - decision release:readiness by agent @ release_readiness: ready=True version=1.1.0
-  - verification (from verify run 1, hash f6fc1eb57c6f5c0c)
+  - verification (from verify run 1, hash a1387ad978f04e8f)
     - design (from design run 1, hash 47cd54c5a977b506)
       - spec (from requirements run 1, hash b35ebb9a194a175a)
         - requirement (from human:product-owner run 1, hash 4aa1c58cd8eb721d)
@@ -219,7 +219,7 @@ Lineage of the release decision:
 
 ## Validation
 
-- Tests: 53 passed, 0 failed (1.28 s)
+- Tests: 53 passed, 0 failed (1.5 s)
 - API contract: missing=[], undeclared=[]
 - Security findings: {'high': 0, 'medium': 0, 'low': 0}
 - Residual threats: ['T5']
@@ -239,7 +239,7 @@ Lineage of the release decision:
 | Metric | Value |
 |---|---|
 | status | succeeded |
-| end_to_end_latency_s | 5.408 |
+| end_to_end_latency_s | 6.091 |
 | nodes_total | 16 |
 | nodes_succeeded | 16 |
 | nodes_failed | 0 |
@@ -256,23 +256,23 @@ Lineage of the release decision:
 | approval_wait_s | 0.0 |
 | incidents_recovered | 1 |
 | incidents_unrecovered | 0 |
-| mttr_s | 0.807 |
-| stage_latency_s | {'design': 0.3, 'docs': 0.513, 'implement': 3.465, 'plan': 0.006, 'release': 0.468, 'requirements': 0.025, 'verify': 1.323} |
+| mttr_s | 0.915 |
+| stage_latency_s | {'design': 0.383, 'docs': 0.598, 'implement': 3.878, 'plan': 0.005, 'release': 0.525, 'requirements': 0.023, 'verify': 1.558} |
 
 ## Workspace commits (checkpoints)
 
 ```text
-05977f5615 baseline: empty workspace
-e8645325ae baseline: project scaffold (pytest config)
-29dcd68031 baseline: copied from /home/claude/agentic-url-shortener/runs/20260929-182928-greenfield-57d5/release
-c42ffdb477 [threat_model] 4 threats identified, 1 residual
-d43811a27b [design] 7 endpoints, 3 ADRs
-9849086ab3 [impl:B1] B1: 1 files
-840df29363 [impl:B2] B2: 1 files
-a8bcdd3571 [impl:B3] B3: 3 files
-e026194a60 [impl:B4] B4: 1 files
-3745b180d9 [impl:B5] B5: 4 files
-5e9e8616f2 [docs] API reference for 7 endpoints; changelog 1.1.0
+b8d44feba4 baseline: empty workspace
+a799a2e15a baseline: project scaffold (pytest config)
+418fedbdec baseline: copied from /home/claude/agentic-url-shortener/runs/20260930-091230-greenfield-ebd5/release
+01da20c3a0 [threat_model] 4 threats identified, 1 residual
+869580bc4c [design] 7 endpoints, 3 ADRs
+f27ce3c4b8 [impl:B1] B1: 1 files
+f06252ca81 [impl:B2] B2: 1 files
+dbcb7b20e5 [impl:B3] B3: 3 files
+0c01e7675d [impl:B4] B4: 1 files
+fb66d782bc [impl:B5] B5: 4 files
+2a00bf3bd5 [docs] API reference for 7 endpoints; changelog 1.1.0
 ```
 
 Audit trail: `audit.jsonl` (hash-chained). Artifacts: `artifacts/`. Released tree: `release/`.

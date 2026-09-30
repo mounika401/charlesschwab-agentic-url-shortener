@@ -1,6 +1,6 @@
 {
   "status": "succeeded",
-  "end_to_end_latency_s": 5.408,
+  "end_to_end_latency_s": 6.091,
   "nodes_total": 16,
   "nodes_succeeded": 16,
   "nodes_failed": 0,
@@ -17,14 +17,14 @@
   "approval_wait_s": 0.0,
   "incidents_recovered": 1,
   "incidents_unrecovered": 0,
-  "mttr_s": 0.807,
+  "mttr_s": 0.915,
   "stage_latency_s": {
-    "design": 0.3,
-    "docs": 0.513,
-    "implement": 3.465,
-    "plan": 0.006,
-    "release": 0.468,
-    "requirements": 0.025,
-    "verify": 1.323
+    "design": 0.383,
+    "docs": 0.598,
+    "implement": 3.878,
+    "plan": 0.005,
+    "release": 0.525,
+    "requirements": 0.023,
+    "verify": 1.558
   }
 }

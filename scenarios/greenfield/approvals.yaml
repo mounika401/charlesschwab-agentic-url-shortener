@@ -1,7 +1,7 @@
 # Recorded human decisions for the greenfield scenario.
 # The engine attributes each decision to the named approver; any checkpoint
 # not listed here falls back to the policy default (reject => safe-stop).
-approver: avinash.kanna
+approver: mounika.veeranki
 decisions:
   - match: {checkpoint: clarification}
     decision: answer

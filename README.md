@@ -104,4 +104,4 @@ docs/                    architecture, scenarios, testing, summary, sample runs,
 
 ## Author
 
-Venkata Sai Avinash Kanna Pusuluri. Built with AI assistance (Claude), as the assignment permits.
+Mounika Veeranki. Built with AI assistance (Claude), as the assignment permits.

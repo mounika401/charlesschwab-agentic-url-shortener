@@ -1,6 +1,6 @@
 {
   "status": "succeeded",
-  "end_to_end_latency_s": 4.102,
+  "end_to_end_latency_s": 5.042,
   "nodes_total": 16,
   "nodes_succeeded": 16,
   "nodes_failed": 0,
@@ -19,12 +19,12 @@
   "incidents_unrecovered": 0,
   "mttr_s": null,
   "stage_latency_s": {
-    "design": 0.371,
-    "docs": 0.568,
-    "implement": 2.721,
+    "design": 0.4,
+    "docs": 0.575,
+    "implement": 3.515,
     "plan": 0.006,
-    "release": 0.418,
+    "release": 0.465,
     "requirements": 0.004,
-    "verify": 1.195
+    "verify": 1.44
   }
 }

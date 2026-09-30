@@ -1,4 +1,4 @@
-approver: avinash.kanna
+approver: mounika.veeranki
 decisions:
   - match: {checkpoint: clarification}
     decision: answer
